@@ -40,7 +40,7 @@ export default function Settings() {
     setMessage("Saving changes...");
 
     try {
-      const response = await fetch("/api/auth/profile", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

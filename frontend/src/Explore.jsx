@@ -10,7 +10,7 @@ export default function Explore() {
   const { user, token } = useContext(AuthContext);
 
   useEffect(() => {
-    fetch("/api/destinations")
+    fetch(`${import.meta.env.VITE_API_URL}/api/destinations`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
@@ -34,7 +34,7 @@ export default function Explore() {
     }
 
     try {
-      const response = await fetch("/api/trips", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/trips`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

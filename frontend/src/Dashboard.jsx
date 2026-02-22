@@ -22,7 +22,7 @@ export default function Dashboard() {
     const fetchDashboardData = async () => {
       try {
         // 1. Fetch Profile Data
-        const profileRes = await fetch("/api/auth/me", {
+        const profileRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -31,7 +31,7 @@ export default function Dashboard() {
         setUser(profileData);
 
         // 2. Fetch Trip Data
-        const tripsRes = await fetch("/api/trips", {
+        const tripsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/trips`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

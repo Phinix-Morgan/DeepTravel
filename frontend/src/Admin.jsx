@@ -45,7 +45,7 @@ export default function Admin() {
     setMessage("Deploying new destination...");
 
     try {
-      const response = await fetch("/api/destinations", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/destinations`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

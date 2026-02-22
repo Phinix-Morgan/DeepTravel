@@ -14,7 +14,7 @@ function Home() {
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
-    fetch("/api/test")
+    fetch(`${import.meta.env.VITE_API_URL}/api/test`)
       .then((res) => res.json())
       .then((data) => setMessage(data.message))
       .catch((err) => {

@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     // Only fetch if a token exists
     if (token) {
-      fetch("/api/auth/me", {
+      fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => {
