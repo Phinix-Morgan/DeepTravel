@@ -75,11 +75,11 @@ exports.updateProfile = async (req, res) => {
     const { username, email, bio, location } = req.body;
 
     // Find the user by the ID hidden inside their VIP token, and update their info
-    // { new: true } tells MongoDB to send us back the UPDATED user, not the old one
+    // { returnDocument: 'after' } tells MongoDB to send us back the UPDATED user, not the old one
     const updatedUser = await User.findByIdAndUpdate(
       req.user,
       { username, email, bio, location },
-      { new: true },
+      { returnDocument: 'after' },
     ).select("-password"); // Never send the password back!
 
     if (!updatedUser) {
