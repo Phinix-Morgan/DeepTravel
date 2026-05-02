@@ -4,6 +4,8 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 const authRoutes = require("./routes/auth");
+const destinationRoutes = require("./routes/destinations");
+const tripRoutes = require("./routes/trips");
 
 const app = express();
 
@@ -17,22 +19,19 @@ mongoose
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.error(err));
 
-// Test route
+// Routes
 app.get("/", (req, res) => {
-  res.json({ message: "API Running " });
+  res.json({ message: "API Running" });
 });
-
-app.use("/api/auth", authRoutes);
-
-// Add this right underneath your existing app.use("/api/auth", ...) line!
-app.use("/api/destinations", require("./routes/destinations"));
-
-// Add this under your app.use("/api/destinations", ...) line!
-app.use("/api/trips", require("./routes/trips"));
 
 app.get("/api/test", (req, res) => {
   res.json({ message: "Hello from the Backend! 🚀" });
 });
+
+app.use("/api/auth", authRoutes);
+app.use("/api/destinations", destinationRoutes);
+app.use("/api/trips", tripRoutes);
+
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

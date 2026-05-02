@@ -7,12 +7,10 @@ const UserSchema = new mongoose.Schema(
     password: { type: String, required: true },
     bio: { type: String, default: "" },
     location: { type: String, default: "" },
-
-    // <--- NEW: The Role property --->
-    // By default, everyone who signs up is just a normal "user"
+    avatar: { type: String, default: "" },
     role: { type: String, enum: ["user", "admin"], default: "user" },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("User", UserSchema);

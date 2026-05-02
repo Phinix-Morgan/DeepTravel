@@ -1,22 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const destinationController = require("../controllers/destinationController");
-const authMiddleware = require("../middleware/authMiddleware"); // Door 1
-const adminMiddleware = require("../middleware/adminMiddleware"); // Door 2
+const authMiddleware = require("../middleware/authMiddleware");
+const adminMiddleware = require("../middleware/adminMiddleware");
 
-// Public route: Anyone can VIEW destinations
+// Public routes
 router.get("/", destinationController.getAllDestinations);
-
-// Temporary seed route
+router.get("/:id", destinationController.getDestinationById);
 router.post("/seed", destinationController.seedDestinations);
 
-// <--- NEW: Protected Admin Route --->
-// Notice the double security: authMiddleware THEN adminMiddleware
-router.post(
-  "/",
-  authMiddleware,
-  adminMiddleware,
-  destinationController.createDestination,
-);
+// Admin protected routes
+router.post("/", authMiddleware, adminMiddleware, destinationController.createDestination);
+router.delete("/:id", authMiddleware, adminMiddleware, destinationController.deleteDestination);
 
 module.exports = router;

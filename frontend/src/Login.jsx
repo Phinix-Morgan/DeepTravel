@@ -1,127 +1,141 @@
-import { useState, useContext } from "react"; // <--- 1. Imported useContext
+import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AuthContext } from "./AuthContext"; // <--- 2. Imported AuthContext
+import { AuthContext } from "./AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext); // <--- 3. Tapped into the global brain
+  const { login } = useContext(AuthContext);
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("Logging in...");
-
+    setLoading(true);
+    setMessage("");
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
       const data = await response.json();
-
       if (response.ok) {
-        // <--- 4. Used the smart login function instead of localStorage!
         login(data.token);
-        setMessage("✅ Success: Logged in! Redirecting...");
-
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1000);
+        setMessage("✅ Welcome back! Redirecting...");
+        setTimeout(() => navigate("/dashboard"), 1000);
       } else {
-        setMessage("❌ Error: " + (data.error || "Invalid credentials"));
+        setMessage("❌ " + (data.msg || "Invalid credentials"));
       }
-    } catch (error) {
-      console.error("Fetch error:", error);
+    } catch {
       setMessage("❌ Network Error: Is the backend running?");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-slate-50 font-sans">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md border border-slate-100"
-      >
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-4">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative w-full max-w-md">
+        {/* Logo */}
         <div className="text-center mb-8">
-          <Link
-            to="/"
-            className="text-2xl font-extrabold tracking-tighter text-slate-900 inline-block mb-6 hover:opacity-80 transition"
-          >
-            Deep<span className="text-blue-600">Travel</span>.
+          <Link to="/" className="text-3xl font-black text-white inline-block hover:opacity-80 transition">
+            Deep<span className="text-blue-400">Travel</span>.
           </Link>
-          <h2 className="text-3xl font-bold text-slate-900 mb-2">
-            Welcome Back
-          </h2>
-          <p className="text-slate-500">Log in to your account</p>
+          <p className="text-white/50 mt-2 text-sm">Your premium travel companion</p>
         </div>
 
-        <div className="space-y-5">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              placeholder="you@example.com"
-              onChange={handleChange}
-              className="w-full p-3 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-              required
-            />
+        {/* Card */}
+        <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
+          <div className="mb-8">
+            <h2 className="text-3xl font-black text-white mb-1">Welcome Back</h2>
+            <p className="text-white/50">Log in to continue your journey</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              placeholder="••••••••"
-              onChange={handleChange}
-              className="w-full p-3 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-              required
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-semibold text-white/70 mb-2">Email Address</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">✉️</span>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="you@example.com"
+                  onChange={handleChange}
+                  required
+                  className="w-full pl-11 pr-4 py-3.5 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition font-medium"
+                />
+              </div>
+            </div>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 hover:shadow-lg transition-all duration-300"
-          >
-            Log In
-          </button>
+            <div>
+              <label className="block text-sm font-semibold text-white/70 mb-2">Password</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">🔒</span>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="••••••••"
+                  onChange={handleChange}
+                  required
+                  className="w-full pl-11 pr-12 py-3.5 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition font-medium"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition text-sm"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+            </div>
+
+            {message && (
+              <div
+                className={`p-3.5 rounded-2xl text-sm font-semibold text-center ${
+                  message.includes("✅")
+                    ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                    : "bg-red-500/20 text-red-300 border border-red-500/30"
+                }`}
+              >
+                {message}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-black text-lg rounded-2xl hover:from-blue-400 hover:to-indigo-500 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Logging in...
+                </span>
+              ) : (
+                "Log In →"
+              )}
+            </button>
+          </form>
+
+          <p className="text-center text-white/40 text-sm mt-6">
+            Don't have an account?{" "}
+            <Link to="/signup" className="text-blue-400 font-bold hover:text-blue-300 transition">
+              Sign up free
+            </Link>
+          </p>
         </div>
-
-        {message && (
-          <div
-            className={`mt-6 p-3 rounded-lg text-center text-sm font-semibold ${message.includes("Success") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
-          >
-            {message}
-          </div>
-        )}
-
-        <p className="mt-8 text-center text-sm text-slate-500">
-          Don't have an account?{" "}
-          <Link
-            to="/signup"
-            className="font-bold text-blue-600 hover:text-blue-500 transition"
-          >
-            Sign up
-          </Link>
-        </p>
-      </form>
+      </div>
     </div>
   );
 }
