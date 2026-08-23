@@ -16,12 +16,31 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     },
 
     password: {
       type: String,
-      required: true,
       minlength: 6,
+      default: null,
+    },
+
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      default: null,
+    },
+
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+
+    emailVerified: {
+      type: Boolean,
+      default: false,
     },
 
     role: {
