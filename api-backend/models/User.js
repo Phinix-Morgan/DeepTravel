@@ -22,14 +22,13 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       minlength: 6,
-      default: null,
     },
 
     googleId: {
       type: String,
       unique: true,
       sparse: true,
-      default: null,
+      trim: true,
     },
 
     authProvider: {

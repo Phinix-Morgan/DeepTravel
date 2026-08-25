@@ -167,7 +167,83 @@ async function verifyEmail(req, res) {
   }
 }
 
+async function login(req, res) {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required.",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const user = await User.findOne({
+      email: normalizedEmail,
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid email or password.",
+      });
+    }
+
+    if (user.authProvider !== "local") {
+      return res.status(400).json({
+        message:
+          "This account uses Google sign-in. Please continue with Google.",
+      });
+    }
+
+    if (!user.password) {
+      return res.status(401).json({
+        message: "Invalid email or password.",
+      });
+    }
+
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        message:
+          "Please verify your email before logging in.",
+      });
+    }
+
+    const passwordMatches = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!passwordMatches) {
+      return res.status(401).json({
+        message: "Invalid email or password.",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Login successful.",
+
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        authProvider: user.authProvider,
+        emailVerified: user.emailVerified,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+
+    return res.status(500).json({
+      message:
+        "Something went wrong while logging in.",
+    });
+  }
+}
+
 module.exports = {
   register,
   verifyEmail,
+  login,
 };
