@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
 const EmailVerification = require("../models/EmailVerification");
@@ -220,8 +221,30 @@ async function login(req, res) {
       });
     }
 
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is not configured.");
+
+      return res.status(500).json({
+        message:
+          "Authentication service is not properly configured.",
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        userId: user._id.toString(),
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
+
     return res.status(200).json({
       message: "Login successful.",
+
+      token,
 
       user: {
         id: user._id,
