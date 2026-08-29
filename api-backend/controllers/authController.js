@@ -956,6 +956,32 @@ async function changePassword(req, res) {
   }
 }
 
+async function logoutAllSessions(req, res) {
+  try {
+    const userId = req.user.userId;
+
+    await RefreshToken.deleteMany({
+      user: userId,
+    });
+
+    clearRefreshTokenCookie(res);
+
+    return res.status(200).json({
+      message: "All sessions have been logged out successfully.",
+    });
+  } catch (error) {
+    console.error(
+      "Logout all sessions error:",
+      error
+    );
+
+    return res.status(500).json({
+      message:
+        "Something went wrong while logging out of all sessions.",
+    });
+  }
+}
+
 
 module.exports = {
   register,
@@ -967,6 +993,7 @@ module.exports = {
   googleCallback,
   refreshAccessToken,
   logout,
+  logoutAllSessions,
   forgotPassword,
   resetPassword,
   changePassword,

@@ -10,6 +10,7 @@ const {
   googleCallback,
   refreshAccessToken,
   logout,
+  logoutAllSessions,
   forgotPassword,
   resetPassword,
   changePassword,
@@ -72,6 +73,12 @@ router.post(
 router.post(
   "/logout",
   logout
+);
+
+router.post(
+  "/logout-all",
+  authMiddleware,
+  logoutAllSessions
 );
 
 // Google OAuth
