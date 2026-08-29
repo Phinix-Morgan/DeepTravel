@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const EmailVerification = require("../models/EmailVerification");
 const RefreshToken = require("../models/RefreshToken");
+const PasswordResetToken = require("../models/PasswordResetToken");
 
 const {
   generateAccessToken,
@@ -539,7 +540,6 @@ async function refreshAccessToken(req, res) {
       });
     }
 
-    // Rotate the refresh token.
     await RefreshToken.deleteOne({
       _id: storedToken._id,
     });
@@ -573,12 +573,10 @@ async function refreshAccessToken(req, res) {
   }
 }
 
-
-
-
 async function logout(req, res) {
   try {
-    const rawRefreshToken = req.cookies.refreshToken;
+    const rawRefreshToken =
+      req.cookies.refreshToken;
 
     if (rawRefreshToken) {
       const tokenHash =
@@ -606,6 +604,195 @@ async function logout(req, res) {
   }
 }
 
+async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body;
+
+    const genericResponse = {
+      message:
+        "If an account with that email exists, a password reset link has been generated.",
+    };
+
+    if (!email) {
+      return res.status(400).json({
+        message: "Email is required.",
+      });
+    }
+
+    const normalizedEmail =
+      email.trim().toLowerCase();
+
+    const user = await User.findOne({
+      email: normalizedEmail,
+    });
+
+    // Do not reveal whether the account exists.
+    if (!user) {
+      return res.status(200).json(
+        genericResponse
+      );
+    }
+
+    // Google-only accounts do not have a local password.
+    if (
+      user.authProvider !== "local" ||
+      !user.password
+    ) {
+      return res.status(200).json(
+        genericResponse
+      );
+    }
+
+    // Invalidate any previous reset tokens.
+    await PasswordResetToken.deleteMany({
+      user: user._id,
+    });
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    const expiresAt = new Date(
+      Date.now() + 15 * 60 * 1000
+    );
+
+    await PasswordResetToken.create({
+      user: user._id,
+      tokenHash,
+      expiresAt,
+    });
+
+    const resetUrl =
+      `${req.protocol}://${req.get("host")}` +
+      `/api/auth/reset-password/${rawToken}`;
+
+    // Development-only response.
+    // In production, this URL should be sent by email
+    // instead of being returned by the API.
+    return res.status(200).json({
+      ...genericResponse,
+      resetUrl,
+    });
+  } catch (error) {
+    console.error(
+      "Forgot password error:",
+      error
+    );
+
+    return res.status(500).json({
+      message:
+        "Something went wrong while processing the password reset request.",
+    });
+  }
+}
+
+
+
+
+async function resetPassword(req, res) {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        message: "Password reset token is required.",
+      });
+    }
+
+    if (!password) {
+      return res.status(400).json({
+        message: "New password is required.",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: "Password must be at least 6 characters long.",
+      });
+    }
+
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    const resetToken =
+      await PasswordResetToken.findOne({
+        tokenHash,
+      });
+
+    if (!resetToken) {
+      return res.status(400).json({
+        message: "Invalid or expired password reset token.",
+      });
+    }
+
+    if (resetToken.expiresAt < new Date()) {
+      await PasswordResetToken.deleteOne({
+        _id: resetToken._id,
+      });
+
+      return res.status(400).json({
+        message: "Invalid or expired password reset token.",
+      });
+    }
+
+    const user = await User.findById(
+      resetToken.user
+    );
+
+    if (!user) {
+      await PasswordResetToken.deleteOne({
+        _id: resetToken._id,
+      });
+
+      return res.status(404).json({
+        message: "User account not found.",
+      });
+    }
+
+    const hashedPassword =
+      await bcrypt.hash(password, 12);
+
+    user.password = hashedPassword;
+    user.authProvider = "local";
+    user.emailVerified = true;
+
+    await user.save();
+
+    // Invalidate the reset token so it cannot be reused.
+    await PasswordResetToken.deleteOne({
+      _id: resetToken._id,
+    });
+
+    // Revoke all existing refresh-token sessions.
+    await RefreshToken.deleteMany({
+      user: user._id,
+    });
+
+    return res.status(200).json({
+      message:
+        "Password reset successfully. Please log in again.",
+    });
+  } catch (error) {
+    console.error(
+      "Reset password error:",
+      error
+    );
+
+    return res.status(500).json({
+      message:
+        "Something went wrong while resetting your password.",
+    });
+  }
+}
+
+
+
 
 module.exports = {
   register,
@@ -616,4 +803,6 @@ module.exports = {
   googleCallback,
   refreshAccessToken,
   logout,
+  forgotPassword,
+  resetPassword,
 };

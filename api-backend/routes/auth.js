@@ -9,6 +9,8 @@ const {
   googleCallback,
   refreshAccessToken,
   logout,
+  forgotPassword,
+  resetPassword,
 } = require("../controllers/authController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -16,14 +18,31 @@ const adminMiddleware = require("../middleware/adminMiddleware");
 
 const router = express.Router();
 
-router.post("/register", register);
+router.post(
+  "/register",
+  register
+);
 
 router.get(
   "/verify-email/:token",
   verifyEmail
 );
 
-router.post("/login", login);
+router.post(
+  "/login",
+  login
+);
+
+router.post(
+  "/forgot-password",
+  forgotPassword
+);
+
+
+router.post(
+  "/reset-password/:token",
+  resetPassword
+);
 
 router.get(
   "/me",
@@ -37,6 +56,7 @@ router.post(
   refreshAccessToken
 );
 
+// Logout
 router.post(
   "/logout",
   logout
