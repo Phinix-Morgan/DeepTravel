@@ -1,16 +1,17 @@
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { OAuth2Client } = require("google-auth-library");
 
 const User = require("../models/User");
 const EmailVerification = require("../models/EmailVerification");
+const RefreshToken = require("../models/RefreshToken");
 
-const googleClient = new OAuth2Client(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_CALLBACK_URL
-);
+const {
+  generateAccessToken,
+  createRefreshToken,
+  hashRefreshToken,
+  setRefreshTokenCookie,
+  clearRefreshTokenCookie,
+} = require("../utils/authTokens");
 
 async function register(req, res) {
   try {
@@ -228,30 +229,17 @@ async function login(req, res) {
       });
     }
 
-    if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET is not configured.");
+    const accessToken = generateAccessToken(user);
 
-      return res.status(500).json({
-        message:
-          "Authentication service is not properly configured.",
-      });
-    }
+    const refreshToken =
+      await createRefreshToken(user);
 
-    const token = jwt.sign(
-      {
-        userId: user._id.toString(),
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      }
-    );
+    setRefreshTokenCookie(res, refreshToken);
 
     return res.status(200).json({
       message: "Login successful.",
 
-      token,
+      token: accessToken,
 
       user: {
         id: user._id,
@@ -272,14 +260,11 @@ async function login(req, res) {
   }
 }
 
-
-
-
 async function getMe(req, res) {
   try {
-    const user = await User.findById(req.user.userId).select(
-      "-password"
-    );
+    const user = await User.findById(
+      req.user.userId
+    ).select("-password");
 
     if (!user) {
       return res.status(404).json({
@@ -307,37 +292,30 @@ async function getMe(req, res) {
   }
 }
 
-
-
-
 async function googleLogin(req, res) {
   try {
-    if (
-      !process.env.GOOGLE_CLIENT_ID ||
-      !process.env.GOOGLE_CLIENT_SECRET ||
-      !process.env.GOOGLE_CALLBACK_URL
-    ) {
-      console.error(
-        "Google OAuth environment variables are not configured."
-      );
+    const { OAuth2Client } = require(
+      "google-auth-library"
+    );
 
-      return res.status(500).json({
-        message:
-          "Google authentication is not properly configured.",
+    const googleClient = new OAuth2Client(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_CALLBACK_URL
+    );
+
+    const authUrl =
+      googleClient.generateAuthUrl({
+        access_type: "offline",
+
+        scope: [
+          "openid",
+          "email",
+          "profile",
+        ],
+
+        prompt: "select_account",
       });
-    }
-
-    const authUrl = googleClient.generateAuthUrl({
-      access_type: "offline",
-
-      scope: [
-        "openid",
-        "email",
-        "profile",
-      ],
-
-      prompt: "select_account",
-    });
 
     return res.redirect(authUrl);
   } catch (error) {
@@ -355,6 +333,16 @@ async function googleLogin(req, res) {
 
 async function googleCallback(req, res) {
   try {
+    const { OAuth2Client } = require(
+      "google-auth-library"
+    );
+
+    const googleClient = new OAuth2Client(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_CALLBACK_URL
+    );
+
     const { code } = req.query;
 
     if (!code) {
@@ -464,30 +452,21 @@ async function googleCallback(req, res) {
       await user.save();
     }
 
-    if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET is not configured.");
+    const accessToken =
+      generateAccessToken(user);
 
-      return res.status(500).json({
-        message:
-          "Authentication service is not properly configured.",
-      });
-    }
+    const refreshToken =
+      await createRefreshToken(user);
 
-    const token = jwt.sign(
-      {
-        userId: user._id.toString(),
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      }
+    setRefreshTokenCookie(
+      res,
+      refreshToken
     );
 
     return res.status(200).json({
       message: "Google login successful.",
 
-      token,
+      token: accessToken,
 
       user: {
         id: user._id,
@@ -511,6 +490,123 @@ async function googleCallback(req, res) {
   }
 }
 
+async function refreshAccessToken(req, res) {
+  try {
+    const rawRefreshToken =
+      req.cookies.refreshToken;
+
+    if (!rawRefreshToken) {
+      return res.status(401).json({
+        message: "Refresh token required.",
+      });
+    }
+
+    const tokenHash =
+      hashRefreshToken(rawRefreshToken);
+
+    const storedToken =
+      await RefreshToken.findOne({
+        tokenHash,
+      });
+
+    if (!storedToken) {
+      return res.status(401).json({
+        message: "Invalid refresh token.",
+      });
+    }
+
+    if (storedToken.expiresAt < new Date()) {
+      await RefreshToken.deleteOne({
+        _id: storedToken._id,
+      });
+
+      return res.status(401).json({
+        message: "Refresh token has expired.",
+      });
+    }
+
+    const user = await User.findById(
+      storedToken.user
+    );
+
+    if (!user) {
+      await RefreshToken.deleteOne({
+        _id: storedToken._id,
+      });
+
+      return res.status(404).json({
+        message: "User account not found.",
+      });
+    }
+
+    // Rotate the refresh token.
+    await RefreshToken.deleteOne({
+      _id: storedToken._id,
+    });
+
+    const newAccessToken =
+      generateAccessToken(user);
+
+    const newRefreshToken =
+      await createRefreshToken(user);
+
+    setRefreshTokenCookie(
+      res,
+      newRefreshToken
+    );
+
+    return res.status(200).json({
+      message:
+        "Access token refreshed successfully.",
+      token: newAccessToken,
+    });
+  } catch (error) {
+    console.error(
+      "Refresh token error:",
+      error
+    );
+
+    return res.status(500).json({
+      message:
+        "Something went wrong while refreshing the access token.",
+    });
+  }
+}
+
+
+
+
+async function logout(req, res) {
+  try {
+    const rawRefreshToken = req.cookies.refreshToken;
+
+    if (rawRefreshToken) {
+      const tokenHash =
+        hashRefreshToken(rawRefreshToken);
+
+      await RefreshToken.deleteOne({
+        tokenHash,
+      });
+    }
+
+    clearRefreshTokenCookie(res);
+
+    return res.status(200).json({
+      message: "Logout successful.",
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+
+    clearRefreshTokenCookie(res);
+
+    return res.status(500).json({
+      message:
+        "Something went wrong while logging out.",
+    });
+  }
+}
+
+
 module.exports = {
   register,
   verifyEmail,
@@ -518,4 +614,6 @@ module.exports = {
   getMe,
   googleLogin,
   googleCallback,
+  refreshAccessToken,
+  logout,
 };

@@ -7,6 +7,8 @@ const {
   getMe,
   googleLogin,
   googleCallback,
+  refreshAccessToken,
+  logout,
 } = require("../controllers/authController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -29,6 +31,16 @@ router.get(
   getMe
 );
 
+// Refresh access token
+router.post(
+  "/refresh",
+  refreshAccessToken
+);
+
+router.post(
+  "/logout",
+  logout
+);
 
 // Google OAuth
 router.get(
