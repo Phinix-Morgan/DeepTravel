@@ -177,6 +177,90 @@ async function verifyEmail(req, res) {
   }
 }
 
+async function resendVerificationEmail(req, res) {
+  try {
+    const { email } = req.body;
+
+    const genericResponse = {
+      message:
+        "If an unverified account with that email exists, a new verification link has been generated.",
+    };
+
+    if (!email) {
+      return res.status(400).json({
+        message: "Email is required.",
+      });
+    }
+
+    const normalizedEmail =
+      email.trim().toLowerCase();
+
+    const user = await User.findOne({
+      email: normalizedEmail,
+    });
+
+    // Do not reveal whether the account exists.
+    if (!user) {
+      return res.status(200).json(
+        genericResponse
+      );
+    }
+
+    // Already verified accounts do not need another token.
+    if (user.emailVerified) {
+      return res.status(200).json(
+        genericResponse
+      );
+    }
+
+    // Remove previous verification tokens.
+    await EmailVerification.deleteMany({
+      user: user._id,
+    });
+
+    const rawToken = crypto
+      .randomBytes(32)
+      .toString("hex");
+
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    const expiresAt = new Date(
+      Date.now() + 60 * 60 * 1000
+    );
+
+    await EmailVerification.create({
+      user: user._id,
+      tokenHash,
+      expiresAt,
+    });
+
+    const verificationUrl =
+      `${req.protocol}://${req.get("host")}` +
+      `/api/auth/verify-email/${rawToken}`;
+
+    // Development-only response.
+    // In production, this URL should be sent by email
+    // instead of being returned by the API.
+    return res.status(200).json({
+      ...genericResponse,
+      verificationUrl,
+    });
+  } catch (error) {
+    console.error(
+      "Resend verification error:",
+      error
+    );
+
+    return res.status(500).json({
+      message:
+        "Something went wrong while processing the verification request.",
+    });
+  }
+}
+
 async function login(req, res) {
   try {
     const { email, password } = req.body;
@@ -626,14 +710,12 @@ async function forgotPassword(req, res) {
       email: normalizedEmail,
     });
 
-    // Do not reveal whether the account exists.
     if (!user) {
       return res.status(200).json(
         genericResponse
       );
     }
 
-    // Google-only accounts do not have a local password.
     if (
       user.authProvider !== "local" ||
       !user.password
@@ -643,12 +725,13 @@ async function forgotPassword(req, res) {
       );
     }
 
-    // Invalidate any previous reset tokens.
     await PasswordResetToken.deleteMany({
       user: user._id,
     });
 
-    const rawToken = crypto.randomBytes(32).toString("hex");
+    const rawToken = crypto
+      .randomBytes(32)
+      .toString("hex");
 
     const tokenHash = crypto
       .createHash("sha256")
@@ -669,9 +752,6 @@ async function forgotPassword(req, res) {
       `${req.protocol}://${req.get("host")}` +
       `/api/auth/reset-password/${rawToken}`;
 
-    // Development-only response.
-    // In production, this URL should be sent by email
-    // instead of being returned by the API.
     return res.status(200).json({
       ...genericResponse,
       resetUrl,
@@ -689,9 +769,6 @@ async function forgotPassword(req, res) {
   }
 }
 
-
-
-
 async function resetPassword(req, res) {
   try {
     const { token } = req.params;
@@ -699,7 +776,8 @@ async function resetPassword(req, res) {
 
     if (!token) {
       return res.status(400).json({
-        message: "Password reset token is required.",
+        message:
+          "Password reset token is required.",
       });
     }
 
@@ -711,7 +789,8 @@ async function resetPassword(req, res) {
 
     if (password.length < 6) {
       return res.status(400).json({
-        message: "Password must be at least 6 characters long.",
+        message:
+          "Password must be at least 6 characters long.",
       });
     }
 
@@ -727,7 +806,8 @@ async function resetPassword(req, res) {
 
     if (!resetToken) {
       return res.status(400).json({
-        message: "Invalid or expired password reset token.",
+        message:
+          "Invalid or expired password reset token.",
       });
     }
 
@@ -737,7 +817,8 @@ async function resetPassword(req, res) {
       });
 
       return res.status(400).json({
-        message: "Invalid or expired password reset token.",
+        message:
+          "Invalid or expired password reset token.",
       });
     }
 
@@ -764,12 +845,10 @@ async function resetPassword(req, res) {
 
     await user.save();
 
-    // Invalidate the reset token so it cannot be reused.
     await PasswordResetToken.deleteOne({
       _id: resetToken._id,
     });
 
-    // Revoke all existing refresh-token sessions.
     await RefreshToken.deleteMany({
       user: user._id,
     });
@@ -791,12 +870,10 @@ async function resetPassword(req, res) {
   }
 }
 
-
-
-
 module.exports = {
   register,
   verifyEmail,
+  resendVerificationEmail,
   login,
   getMe,
   googleLogin,

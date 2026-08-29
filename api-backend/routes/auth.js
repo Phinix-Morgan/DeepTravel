@@ -3,6 +3,7 @@ const express = require("express");
 const {
   register,
   verifyEmail,
+  resendVerificationEmail,
   login,
   getMe,
   googleLogin,
@@ -29,6 +30,11 @@ router.get(
 );
 
 router.post(
+  "/resend-verification",
+  resendVerificationEmail
+);
+
+router.post(
   "/login",
   login
 );
@@ -37,7 +43,6 @@ router.post(
   "/forgot-password",
   forgotPassword
 );
-
 
 router.post(
   "/reset-password/:token",
