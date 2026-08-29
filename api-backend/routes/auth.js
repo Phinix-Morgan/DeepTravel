@@ -18,11 +18,19 @@ const {
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
+const {
+  authRateLimiter,
+} = require("../middleware/rateLimitMiddleware");
 
 const router = express.Router();
 
+// --------------------------------------------------
+// Registration & Email Verification
+// --------------------------------------------------
+
 router.post(
   "/register",
+  authRateLimiter,
   register
 );
 
@@ -33,21 +41,29 @@ router.get(
 
 router.post(
   "/resend-verification",
+  authRateLimiter,
   resendVerificationEmail
 );
 
+// --------------------------------------------------
+// Local Authentication
+// --------------------------------------------------
+
 router.post(
   "/login",
+  authRateLimiter,
   login
 );
 
 router.post(
   "/forgot-password",
+  authRateLimiter,
   forgotPassword
 );
 
 router.post(
   "/reset-password/:token",
+  authRateLimiter,
   resetPassword
 );
 
@@ -57,19 +73,25 @@ router.post(
   changePassword
 );
 
+// --------------------------------------------------
+// Current User
+// --------------------------------------------------
+
 router.get(
   "/me",
   authMiddleware,
   getMe
 );
 
-// Refresh access token
+// --------------------------------------------------
+// Refresh & Sessions
+// --------------------------------------------------
+
 router.post(
   "/refresh",
   refreshAccessToken
 );
 
-// Logout
 router.post(
   "/logout",
   logout
@@ -81,9 +103,13 @@ router.post(
   logoutAllSessions
 );
 
+// --------------------------------------------------
 // Google OAuth
+// --------------------------------------------------
+
 router.get(
   "/google",
+  authRateLimiter,
   googleLogin
 );
 
@@ -92,7 +118,10 @@ router.get(
   googleCallback
 );
 
-// Protected admin test route
+// --------------------------------------------------
+// Protected Admin Test Route
+// --------------------------------------------------
+
 router.get(
   "/test-admin",
   authMiddleware,
