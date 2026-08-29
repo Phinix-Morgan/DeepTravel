@@ -6,6 +6,8 @@ const cors = require("cors");
 const helmet = require("helmet");
 
 const authRoutes = require("./routes/auth");
+const customTripRoutes = require("./routes/customTrips");
+const adminCustomTripRoutes = require("./routes/adminCustomTrips");
 
 const app = express();
 
@@ -61,6 +63,16 @@ app.get("/api/test", (req, res) => {
 app.use(
   "/api/auth",
   authRoutes
+);
+
+app.use(
+  "/api/custom-trips",
+  customTripRoutes
+);
+
+app.use(
+  "/api/admin/custom-trips",
+  adminCustomTripRoutes
 );
 
 // --------------------------------------------------

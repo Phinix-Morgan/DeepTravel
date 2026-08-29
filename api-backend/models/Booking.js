@@ -14,6 +14,12 @@ const bookingSchema = new mongoose.Schema(
       required: true,
     },
 
+    departure: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Departure",
+      required: true,
+    },
+
     travelers: {
       type: Number,
       required: true,
