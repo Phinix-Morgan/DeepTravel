@@ -12,6 +12,7 @@ const {
   logout,
   forgotPassword,
   resetPassword,
+  changePassword,
 } = require("../controllers/authController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -47,6 +48,12 @@ router.post(
 router.post(
   "/reset-password/:token",
   resetPassword
+);
+
+router.post(
+  "/change-password",
+  authMiddleware,
+  changePassword
 );
 
 router.get(

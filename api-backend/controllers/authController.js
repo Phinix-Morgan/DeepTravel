@@ -870,6 +870,93 @@ async function resetPassword(req, res) {
   }
 }
 
+
+async function changePassword(req, res) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        message:
+          "Current password and new password are required.",
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        message:
+          "New password must be at least 6 characters long.",
+      });
+    }
+
+    if (currentPassword === newPassword) {
+      return res.status(400).json({
+        message:
+          "New password must be different from your current password.",
+      });
+    }
+
+    const user = await User.findById(req.user.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User account not found.",
+      });
+    }
+
+    if (user.authProvider !== "local" || !user.password) {
+      return res.status(400).json({
+        message:
+          "Password changes are not available for this account. Please use your authentication provider.",
+      });
+    }
+
+    const passwordMatches = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
+
+    if (!passwordMatches) {
+      return res.status(401).json({
+        message: "Current password is incorrect.",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(
+      newPassword,
+      12
+    );
+
+    user.password = hashedPassword;
+
+    await user.save();
+
+    // Revoke every existing refresh session.
+    await RefreshToken.deleteMany({
+      user: user._id,
+    });
+
+    // Also clear the current refresh cookie.
+    clearRefreshTokenCookie(res);
+
+    return res.status(200).json({
+      message:
+        "Password changed successfully. Please log in again.",
+    });
+  } catch (error) {
+    console.error(
+      "Change password error:",
+      error
+    );
+
+    return res.status(500).json({
+      message:
+        "Something went wrong while changing your password.",
+    });
+  }
+}
+
+
 module.exports = {
   register,
   verifyEmail,
@@ -882,4 +969,5 @@ module.exports = {
   logout,
   forgotPassword,
   resetPassword,
+  changePassword,
 };
