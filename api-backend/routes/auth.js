@@ -4,6 +4,7 @@ const {
   register,
   verifyEmail,
   login,
+  getMe,
   googleLogin,
   googleCallback,
 } = require("../controllers/authController");
@@ -21,6 +22,13 @@ router.get(
 );
 
 router.post("/login", login);
+
+router.get(
+  "/me",
+  authMiddleware,
+  getMe
+);
+
 
 // Google OAuth
 router.get(

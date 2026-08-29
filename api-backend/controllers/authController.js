@@ -272,6 +272,44 @@ async function login(req, res) {
   }
 }
 
+
+
+
+async function getMe(req, res) {
+  try {
+    const user = await User.findById(req.user.userId).select(
+      "-password"
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User account not found.",
+      });
+    }
+
+    return res.status(200).json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        authProvider: user.authProvider,
+        emailVerified: user.emailVerified,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Get current user error:", error);
+
+    return res.status(500).json({
+      message:
+        "Something went wrong while retrieving your account.",
+    });
+  }
+}
+
+
+
+
 async function googleLogin(req, res) {
   try {
     if (
@@ -477,6 +515,7 @@ module.exports = {
   register,
   verifyEmail,
   login,
+  getMe,
   googleLogin,
   googleCallback,
 };
