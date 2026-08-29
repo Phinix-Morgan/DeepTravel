@@ -3,19 +3,24 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const cookieParser = require("cookie-parser");
+const helmet = require("helmet");
 
 const authRoutes = require("./routes/auth");
 
 const app = express();
 
 // --------------------------------------------------
-// Middleware
+// Security Middleware
+// --------------------------------------------------
+
+app.use(helmet());
+
+// --------------------------------------------------
+// General Middleware
 // --------------------------------------------------
 
 app.use(cors());
 app.use(express.json());
-app.use(cookieParser());
 
 // --------------------------------------------------
 // Database
@@ -27,11 +32,14 @@ mongoose
     console.log("MongoDB Connected");
   })
   .catch((error) => {
-    console.error("MongoDB connection failed:", error);
+    console.error(
+      "MongoDB connection failed:",
+      error
+    );
   });
 
 // --------------------------------------------------
-// Health check
+// Health Check
 // --------------------------------------------------
 
 app.get("/", (req, res) => {
@@ -50,14 +58,20 @@ app.get("/api/test", (req, res) => {
 // Routes
 // --------------------------------------------------
 
-app.use("/api/auth", authRoutes);
+app.use(
+  "/api/auth",
+  authRoutes
+);
 
 // --------------------------------------------------
-// Start server
+// Start Server
 // --------------------------------------------------
 
-const PORT = process.env.PORT || 5000;
+const PORT =
+  process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`DeepTravel API running on port ${PORT}`);
+  console.log(
+    `DeepTravel API running on port ${PORT}`
+  );
 });
