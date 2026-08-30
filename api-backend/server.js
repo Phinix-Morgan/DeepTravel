@@ -7,7 +7,10 @@ const helmet = require("helmet");
 
 const authRoutes = require("./routes/auth");
 const customTripRoutes = require("./routes/customTrips");
+const customTripBookingRoutes = require("./routes/customTripBooking");
 const adminCustomTripRoutes = require("./routes/adminCustomTrips");
+const bookingRoutes = require("./routes/bookings");
+const paymentRoutes = require("./routes/payments");
 
 const app = express();
 
@@ -71,8 +74,23 @@ app.use(
 );
 
 app.use(
+  "/api/custom-trips",
+  customTripBookingRoutes
+);
+
+app.use(
   "/api/admin/custom-trips",
   adminCustomTripRoutes
+);
+
+app.use(
+  "/api/bookings",
+  bookingRoutes
+);
+
+app.use(
+  "/api/payments",
+  paymentRoutes
 );
 
 // --------------------------------------------------
