@@ -6,6 +6,8 @@ import {
   cancelBooking,
   getMyBookings,
 } from "../services/bookings";
+import { getMyCustomTripRequests } from "../services/customTrips";
+import { Skeleton, StatusBadge } from "../components/ui";
 
 import "../styles/trips.css";
 
@@ -246,12 +248,33 @@ function EmptyTrips() {
   );
 }
 
+function CustomTripCard({ request }) {
+  const packageData = request?.tourPackage;
+  const quoteReady = request?.status === "quoted";
+  const expired = request?.status === "expired" || (request?.quoteExpiresAt && new Date(request.quoteExpiresAt) <= new Date());
+
+  return (
+    <article className="trip-card custom-trip-card">
+      <div className="trip-card__image">
+        {packageData?.imageUrl ? <img src={packageData.imageUrl} alt={packageData.title || "Custom trip"} /> : <div className="trip-card__image-placeholder">DT</div>}
+      </div>
+      <div className="trip-card__body">
+        <div className="trip-card__top"><div><span className="eyebrow">Custom proposal · {formatDate(request?.preferredStartDate)}</span><h3>{packageData?.title || "Tailored journey"}</h3></div><StatusBadge status={expired ? "expired" : request?.status} /></div>
+        <p className="trip-card__description">{quoteReady ? "Your tailored proposal is ready to review." : request?.customerMessage || "A journey shaped around your preferences."}</p>
+        <div className="trip-card__meta"><div><span>Travelers</span><strong>{request?.travelers || "—"}</strong></div><div><span>Duration</span><strong>{request?.requestedDuration?.days ? `${request.requestedDuration.days} days` : "Flexible"}</strong></div><div><span>{quoteReady ? "Quoted total" : "Requested"}</span><strong>{quoteReady ? formatCurrency(request?.quotedTotalPrice) : formatDate(request?.createdAt)}</strong></div></div>
+        <div className="trip-card__footer"><span className="trip-card__booking-id">Request #{request?._id?.slice(-8).toUpperCase()}</span><Link to={`/custom-trips/${request?._id}`} className="btn btn-secondary">{quoteReady ? "Review quote" : "View request"}</Link></div>
+      </div>
+    </article>
+  );
+}
+
 function Trips() {
   const { user, token, loading: authLoading } =
     useAuth();
 
   const [bookings, setBookings] =
     useState([]);
+  const [customRequests, setCustomRequests] = useState([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -266,6 +289,7 @@ function Trips() {
     useCallback(async () => {
       if (!token) {
         setBookings([]);
+        setCustomRequests([]);
         setLoading(false);
         return;
       }
@@ -274,14 +298,34 @@ function Trips() {
         setLoading(true);
         setError("");
 
-        const response =
-          await getMyBookings(token);
+        const [bookingResult, customResult] = await Promise.allSettled([
+          getMyBookings(token),
+          getMyCustomTripRequests(token),
+        ]);
+
+        if (bookingResult.status === "rejected") {
+          throw bookingResult.reason;
+        }
 
         setBookings(
-          Array.isArray(response?.bookings)
-            ? response.bookings
+          Array.isArray(bookingResult.value?.bookings)
+            ? bookingResult.value.bookings
             : []
         );
+
+        if (customResult.status === "fulfilled") {
+          setCustomRequests(
+            Array.isArray(customResult.value?.requests)
+              ? customResult.value.requests
+              : []
+          );
+        } else {
+          setCustomRequests([]);
+          setError(
+            customResult.reason?.message ||
+              "Your bookings loaded, but custom trip requests are temporarily unavailable."
+          );
+        }
       } catch (err) {
         setError(
           err?.message ||
@@ -406,13 +450,13 @@ function Trips() {
 
           <div className="trips-hero__count">
             <strong>
-              {bookings.length
+              {(bookings.length + customRequests.length)
                 .toString()
                 .padStart(2, "0")}
             </strong>
 
             <span>
-              Total bookings
+              Journeys & requests
             </span>
           </div>
         </div>
@@ -441,18 +485,18 @@ function Trips() {
 
           {loading ? (
             <div className="trips-loading">
-              <span className="eyebrow">
-                Your journeys
-              </span>
-
-              <h2 className="display-md">
-                Loading trips...
-              </h2>
+              <Skeleton height="18px" width="150px" /><Skeleton height="60px" width="340px" /><Skeleton height="280px" />
             </div>
-          ) : bookings.length === 0 ? (
+          ) : bookings.length === 0 && customRequests.length === 0 ? (
             <EmptyTrips />
           ) : (
             <>
+              {customRequests.length > 0 && (
+                <section className="trips-section">
+                  <div className="section-heading"><div><span className="eyebrow">Designed for you</span><h2 className="display-md">Custom trip requests</h2></div><span className="trips-section__count">{customRequests.length.toString().padStart(2, "0")} requests</span></div>
+                  <div className="trips-list">{customRequests.map((request) => <CustomTripCard key={request._id} request={request} />)}</div>
+                </section>
+              )}
               {/* ==================================================
                   UPCOMING
                   ================================================== */}

@@ -20,6 +20,8 @@ import OAuthCallback from "./pages/OAuthCallback";
 import Trips from "./pages/Trips";
 import TripDetails from "./pages/TripDetails";
 import PackageDetails from "./pages/PackageDetails";
+import CustomTripBuilder from "./pages/CustomTripBuilder";
+import CustomTripDetails from "./pages/CustomTripDetails";
 
 
 
@@ -172,11 +174,12 @@ function App() {
 
             <Route
               path="/custom-trip"
-              element={
-                <Placeholder
-                  title="Build your journey"
-                />
-              }
+              element={<CustomTripBuilder />}
+            />
+
+            <Route
+              path="/custom-trips/:id"
+              element={<CustomTripDetails />}
             />
 
           </Route>
