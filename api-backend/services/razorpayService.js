@@ -1,22 +1,26 @@
 const Razorpay = require("razorpay");
 
 // --------------------------------------------------
-// Razorpay Client
+// Razorpay Client Helper
 // --------------------------------------------------
 
-if (
-  !process.env.RAZORPAY_KEY_ID ||
-  !process.env.RAZORPAY_KEY_SECRET
-) {
-  throw new Error(
-    "Razorpay credentials are missing from environment variables."
-  );
-}
+function getRazorpayClient() {
+  if (
+    !process.env.RAZORPAY_KEY_ID ||
+    !process.env.RAZORPAY_KEY_SECRET
+  ) {
+    const error = new Error(
+      "Razorpay credentials are missing from environment variables."
+    );
+    error.statusCode = 500;
+    throw error;
+  }
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+  return new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+}
 
 // --------------------------------------------------
 // Create Razorpay Order
@@ -41,8 +45,10 @@ const createRazorpayOrder = async ({
   const amountInPaise =
     Math.round(amount * 100);
 
+  const client = getRazorpayClient();
+
   const order =
-    await razorpay.orders.create({
+    await client.orders.create({
       amount: amountInPaise,
       currency,
       receipt,
@@ -60,7 +66,8 @@ const createRazorpayOrder = async ({
 const fetchRazorpayOrder = async (
   orderId
 ) => {
-  return razorpay.orders.fetch(
+  const client = getRazorpayClient();
+  return client.orders.fetch(
     orderId
   );
 };
@@ -72,7 +79,8 @@ const fetchRazorpayOrder = async (
 const fetchRazorpayPayment = async (
   paymentId
 ) => {
-  return razorpay.payments.fetch(
+  const client = getRazorpayClient();
+  return client.payments.fetch(
     paymentId
   );
 };
@@ -82,7 +90,10 @@ const fetchRazorpayPayment = async (
 // --------------------------------------------------
 
 module.exports = {
-  razorpay,
+  get razorpay() {
+    return getRazorpayClient();
+  },
+  getRazorpayClient,
   createRazorpayOrder,
   fetchRazorpayOrder,
   fetchRazorpayPayment,

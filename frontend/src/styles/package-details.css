@@ -1,0 +1,939 @@
+/* =========================================================
+   DEEPTRAVEL — PACKAGE DETAILS
+   ========================================================= */
+
+.package-details {
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.package-details__hero {
+  position: relative;
+  min-height: 720px;
+  overflow: hidden;
+
+  background: var(--color-bg-soft);
+}
+
+.package-details__hero > img {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  filter: saturate(0.82);
+
+  transform: scale(1.01);
+}
+
+.package-details__hero-overlay {
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.18),
+      transparent 36%,
+      rgba(0, 0, 0, 0.86) 100%
+    );
+}
+
+.package-details__hero-placeholder {
+  position: absolute;
+  inset: 0;
+
+  display: grid;
+  place-items: center;
+
+  color: var(--color-text-faint);
+
+  font-family: var(--font-display);
+  font-size: 5rem;
+}
+
+.package-details__hero-content {
+  position: relative;
+  z-index: 1;
+
+  min-height: 720px;
+
+  padding-top: 8rem;
+  padding-bottom: 5rem;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.package-details__back {
+  width: fit-content;
+
+  color: rgba(255, 255, 255, 0.78);
+
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+
+  transition:
+    color var(--transition-fast);
+}
+
+.package-details__back:hover {
+  color: var(--color-accent);
+}
+
+.package-details__hero-copy {
+  max-width: 900px;
+}
+
+.package-details__hero-copy h1 {
+  margin-top: 0.8rem;
+
+  color: var(--color-text);
+
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 9vw, 8.5rem);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 0.86;
+}
+
+.package-details__hero-copy p {
+  max-width: 650px;
+  margin-top: 1.5rem;
+
+  color: rgba(255, 255, 255, 0.68);
+
+  font-size: 0.9rem;
+  line-height: 1.75;
+}
+
+
+/* =========================================================
+   OVERVIEW
+   ========================================================= */
+
+.package-details__overview {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.2fr)
+    minmax(360px, 0.8fr);
+
+  gap: 6rem;
+
+  align-items: end;
+}
+
+.package-details__overview-intro h2 {
+  margin-top: 1rem;
+}
+
+.package-details__overview-intro p {
+  max-width: 620px;
+  margin-top: 1.5rem;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.package-details__facts {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  border-top: 1px solid var(--color-border);
+}
+
+.package-details__facts > div {
+  min-width: 0;
+  padding: 1.5rem 1rem 0;
+
+  border-right: 1px solid var(--color-border);
+}
+
+.package-details__facts > div:last-child {
+  border-right: 0;
+}
+
+.package-details__facts span,
+.package-details__facts small {
+  display: block;
+
+  color: var(--color-text-faint);
+
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.package-details__facts strong {
+  display: block;
+
+  margin-top: 0.7rem;
+
+  color: var(--color-text-soft);
+
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 400;
+
+  line-height: 1.1;
+}
+
+.package-details__facts small {
+  margin-top: 0.35rem;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.55rem;
+}
+
+
+/* =========================================================
+   FEATURES
+   ========================================================= */
+
+.package-details__features {
+  padding-top: 7rem;
+  padding-bottom: 7rem;
+
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  background: var(--color-bg-soft);
+}
+
+.package-details__features-grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 0.85fr)
+    minmax(0, 1.15fr);
+
+  gap: 6rem;
+}
+
+.package-details__features-grid h2 {
+  margin-top: 1rem;
+}
+
+.package-details__feature-list {
+  border-top: 1px solid var(--color-border);
+}
+
+.package-details__feature {
+  padding: 1.5rem 0;
+
+  display: grid;
+
+  grid-template-columns: 36px minmax(0, 1fr);
+
+  gap: 1rem;
+
+  border-bottom: 1px solid var(--color-border);
+}
+
+.package-details__feature-icon {
+  width: 30px;
+  height: 30px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+
+  color: var(--color-accent);
+
+  font-size: 0.75rem;
+}
+
+.package-details__feature strong {
+  color: var(--color-text-soft);
+
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 400;
+}
+
+.package-details__feature p {
+  margin-top: 0.35rem;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   ITINERARY
+   ========================================================= */
+
+.package-details__itinerary {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.package-details__count {
+  color: var(--color-text-muted);
+
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.package-details__itinerary-list {
+  margin-top: 4rem;
+
+  border-top: 1px solid var(--color-border);
+}
+
+.package-details__day {
+  display: grid;
+
+  grid-template-columns: 100px minmax(0, 1fr);
+
+  gap: 2rem;
+
+  padding: 2.5rem 0;
+
+  border-bottom: 1px solid var(--color-border);
+}
+
+.package-details__day-number {
+  color: var(--color-accent);
+
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 400;
+
+  line-height: 1;
+}
+
+.package-details__day-content > span {
+  color: var(--color-text-faint);
+
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.package-details__day-content h3 {
+  margin-top: 0.5rem;
+
+  color: var(--color-text);
+
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+}
+
+.package-details__day-content > p {
+  max-width: 680px;
+  margin-top: 0.8rem;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.8rem;
+  line-height: 1.75;
+}
+
+.package-details__day-content > div {
+  margin-top: 1.25rem;
+}
+
+.package-details__day-content small {
+  color: var(--color-text-faint);
+
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.package-details__day-content div p {
+  margin-top: 0.3rem;
+
+  color: var(--color-text-soft);
+
+  font-size: 0.7rem;
+}
+
+
+/* =========================================================
+   INCLUDED / EXCLUDED
+   ========================================================= */
+
+.package-details__included {
+  padding-top: 6rem;
+  padding-bottom: 6rem;
+
+  background: var(--color-bg-soft);
+}
+
+.package-details__included-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 1px;
+
+  border: 1px solid var(--color-border);
+
+  background: var(--color-border);
+}
+
+.package-details__included-grid > div {
+  padding: 3rem;
+
+  background: var(--color-bg-soft);
+}
+
+.package-details__included-grid h2 {
+  margin-top: 0.8rem;
+
+  color: var(--color-text);
+
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+}
+
+.package-details__included-grid ul {
+  margin-top: 2rem;
+
+  display: flex;
+  flex-direction: column;
+
+  list-style: none;
+}
+
+.package-details__included-grid li {
+  padding: 0.9rem 0;
+
+  display: flex;
+
+  gap: 0.8rem;
+
+  border-bottom: 1px solid var(--color-border);
+
+  color: var(--color-text-muted);
+
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.package-details__included-grid li span {
+  color: var(--color-accent);
+}
+
+
+/* =========================================================
+   BOOKING
+   ========================================================= */
+
+.package-details__booking {
+  padding-top: 8rem;
+  padding-bottom: 8rem;
+}
+
+.package-details__booking-card {
+  border: 1px solid var(--color-border);
+
+  background:
+    radial-gradient(
+      circle at 85% 10%,
+      rgba(217, 181, 109, 0.08),
+      transparent 28%
+    ),
+    var(--color-surface);
+}
+
+.package-details__booking-heading {
+  padding: 3rem;
+
+  border-bottom: 1px solid var(--color-border);
+}
+
+.package-details__booking-heading h2 {
+  margin-top: 1rem;
+}
+
+.package-details__booking-heading p {
+  margin-top: 1.25rem;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.8rem;
+}
+
+
+/* =========================================================
+   DEPARTURES
+   ========================================================= */
+
+.package-details__departures {
+  padding: 2.5rem 3rem;
+
+  border-bottom: 1px solid var(--color-border);
+}
+
+.package-details__booking-label {
+  color: var(--color-text-faint);
+
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.package-details__departure-list {
+  margin-top: 1rem;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 0.75rem;
+}
+
+.package-details__departure {
+  min-width: 0;
+
+  padding: 1.1rem 1.25rem;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto
+    auto;
+
+  align-items: center;
+
+  gap: 1rem;
+
+  border: 1px solid var(--color-border);
+
+  background: transparent;
+
+  color: var(--color-text-soft);
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.package-details__departure:hover {
+  border-color: var(--color-border-strong);
+}
+
+.package-details__departure--selected {
+  border-color: var(--color-accent);
+  background: rgba(217, 181, 109, 0.07);
+}
+
+.package-details__departure-date {
+  font-family: var(--font-display);
+
+  font-size: 1rem;
+}
+
+.package-details__departure-seats {
+  color: var(--color-text-muted);
+
+  font-size: 0.6rem;
+  white-space: nowrap;
+}
+
+.package-details__departure-check {
+  color: var(--color-accent);
+
+  font-size: 0.9rem;
+}
+
+.package-details__booking-loading,
+.package-details__no-departures {
+  margin-top: 1rem;
+
+  padding: 1.5rem;
+
+  border: 1px solid var(--color-border);
+
+  color: var(--color-text-muted);
+
+  font-size: 0.75rem;
+}
+
+.package-details__no-departures strong {
+  color: var(--color-text-soft);
+
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 400;
+}
+
+.package-details__no-departures p {
+  margin-top: 0.4rem;
+}
+
+
+/* =========================================================
+   TRAVELERS
+   ========================================================= */
+
+.package-details__travelers {
+  padding: 2rem 3rem;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 2rem;
+
+  border-bottom: 1px solid var(--color-border);
+}
+
+.package-details__travelers p {
+  margin-top: 0.4rem;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.72rem;
+}
+
+.package-details__stepper {
+  display: flex;
+
+  align-items: center;
+
+  border: 1px solid var(--color-border);
+}
+
+.package-details__stepper button {
+  width: 48px;
+  height: 48px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: var(--color-text-soft);
+
+  font-size: 1.1rem;
+
+  cursor: pointer;
+
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.package-details__stepper button:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+
+  color: var(--color-accent);
+}
+
+.package-details__stepper button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.3;
+}
+
+.package-details__stepper strong {
+  width: 50px;
+
+  color: var(--color-text);
+
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 400;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   TOTAL
+   ========================================================= */
+
+.package-details__booking-total {
+  padding: 2.5rem 3rem;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 2rem;
+
+  border-bottom: 1px solid var(--color-border);
+}
+
+.package-details__booking-total span {
+  display: block;
+
+  color: var(--color-text-soft);
+
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+}
+
+.package-details__booking-total small {
+  display: block;
+
+  margin-top: 0.35rem;
+
+  color: var(--color-text-faint);
+
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+}
+
+.package-details__booking-total strong {
+  color: var(--color-accent);
+
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 400;
+}
+
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+.package-details__booking-error {
+  margin: 1.5rem 3rem 0;
+  padding: 1rem 1.25rem;
+
+  border: 1px solid rgba(212, 119, 119, 0.3);
+
+  background: rgba(212, 119, 119, 0.06);
+
+  color: var(--color-danger);
+
+  font-size: 0.72rem;
+}
+
+
+/* =========================================================
+   BOOK BUTTON
+   ========================================================= */
+
+.package-details__book-button {
+  width: calc(100% - 6rem);
+
+  margin: 2rem 3rem 0;
+
+  justify-content: center;
+}
+
+.package-details__book-button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.45;
+}
+
+.package-details__login-note {
+  padding: 1rem 3rem 2.5rem;
+
+  color: var(--color-text-faint);
+
+  font-size: 0.6rem;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   STATES
+   ========================================================= */
+
+.package-details__state {
+  min-height: 75vh;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.package-details__state h1 {
+  margin-top: 1rem;
+}
+
+.package-details__state p {
+  max-width: 520px;
+
+  margin-top: 1.25rem;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.package-details__state-actions {
+  margin-top: 2rem;
+
+  display: flex;
+
+  gap: 1rem;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .package-details__hero,
+  .package-details__hero-content {
+    min-height: 620px;
+  }
+
+  .package-details__overview {
+    grid-template-columns: 1fr;
+
+    gap: 3rem;
+  }
+
+  .package-details__features-grid {
+    grid-template-columns: 1fr;
+
+    gap: 3rem;
+  }
+
+  .package-details__departure-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+@media (max-width: 640px) {
+  .package-details__hero,
+  .package-details__hero-content {
+    min-height: 560px;
+  }
+
+  .package-details__hero-content {
+    padding-top: 7rem;
+    padding-bottom: 3rem;
+  }
+
+  .package-details__hero-copy h1 {
+    font-size: clamp(
+      3.2rem,
+      15vw,
+      5rem
+    );
+  }
+
+  .package-details__overview {
+    gap: 2.5rem;
+  }
+
+  .package-details__facts {
+    grid-template-columns: 1fr;
+  }
+
+  .package-details__facts > div {
+    padding: 1.25rem 0;
+
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .package-details__facts > div:last-child {
+    border-bottom: 0;
+  }
+
+  .package-details__features {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+  }
+
+  .package-details__day {
+    grid-template-columns: 55px minmax(0, 1fr);
+
+    gap: 1rem;
+  }
+
+  .package-details__day-number {
+    font-size: 1.7rem;
+  }
+
+  .package-details__day-content h3 {
+    font-size: 1.5rem;
+  }
+
+  .package-details__included-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .package-details__included-grid > div {
+    padding: 2rem 1.5rem;
+  }
+
+  .package-details__booking-heading {
+    padding: 2rem 1.5rem;
+  }
+
+  .package-details__departures {
+    padding: 2rem 1.5rem;
+  }
+
+  .package-details__travelers {
+    padding: 1.5rem;
+
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .package-details__booking-total {
+    padding: 2rem 1.5rem;
+
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .package-details__booking-error {
+    margin-inline: 1.5rem;
+  }
+
+  .package-details__book-button {
+    width: calc(100% - 3rem);
+
+    margin-inline: 1.5rem;
+  }
+
+  .package-details__login-note {
+    padding-inline: 1.5rem;
+  }
+
+  .package-details__state-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

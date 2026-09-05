@@ -58,6 +58,36 @@ const createBooking = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------
+    // Validate IDs
+    // --------------------------------------------------
+
+    if (
+      !mongoose.Types.ObjectId.isValid(
+        tourPackage
+      )
+    ) {
+      return res.status(400).json({
+        message:
+          "Invalid tour package ID.",
+      });
+    }
+
+    if (
+      !mongoose.Types.ObjectId.isValid(
+        departure
+      )
+    ) {
+      return res.status(400).json({
+        message:
+          "Invalid departure ID.",
+      });
+    }
+
+    // --------------------------------------------------
+    // Start Transaction
+    // --------------------------------------------------
+
     session.startTransaction();
 
     // --------------------------------------------------
@@ -78,7 +108,14 @@ const createBooking = async (req, res) => {
       });
     }
 
-    if (packageData.status !== "active") {
+    // --------------------------------------------------
+    // Package Must Be Active
+    // --------------------------------------------------
+
+    if (
+      packageData.status !==
+      "active"
+    ) {
       await session.abortTransaction();
 
       return res.status(400).json({
@@ -88,7 +125,7 @@ const createBooking = async (req, res) => {
     }
 
     // --------------------------------------------------
-    // Validate package group limit
+    // Validate Package Group Limit
     // --------------------------------------------------
 
     if (
@@ -128,7 +165,7 @@ const createBooking = async (req, res) => {
     }
 
     // --------------------------------------------------
-    // Verify Departure belongs to Package
+    // Verify Departure Belongs To Package
     // --------------------------------------------------
 
     if (
@@ -147,7 +184,10 @@ const createBooking = async (req, res) => {
     // Validate Departure Status
     // --------------------------------------------------
 
-    if (departureData.status !== "open") {
+    if (
+      departureData.status !==
+      "open"
+    ) {
       await session.abortTransaction();
 
       return res.status(400).json({
@@ -190,7 +230,8 @@ const createBooking = async (req, res) => {
         message:
           "Not enough seats are available for this departure.",
         remainingSeats,
-        requestedSeats: travelers,
+        requestedSeats:
+          travelers,
       });
     }
 
@@ -206,7 +247,7 @@ const createBooking = async (req, res) => {
       travelers;
 
     // --------------------------------------------------
-    // Create Booking
+    // Create Pending Booking
     // --------------------------------------------------
 
     const booking =
@@ -214,14 +255,20 @@ const createBooking = async (req, res) => {
         [
           {
             user: userId,
+
             tourPackage:
               packageData._id,
+
             departure:
               departureData._id,
+
             travelers,
+
             pricePerPersonAtBooking:
               pricePerPerson,
+
             totalPrice,
+
             status: "pending",
           },
         ],
@@ -231,15 +278,73 @@ const createBooking = async (req, res) => {
       );
 
     // --------------------------------------------------
-    // Update Departure Capacity
+    // Reserve Departure Seats
+    // --------------------------------------------------
+    //
+    // Re-check the capacity condition inside the
+    // transaction so concurrent booking attempts
+    // cannot exceed the available capacity.
     // --------------------------------------------------
 
-    departureData.bookedSeats +=
-      travelers;
+    const updatedDeparture =
+      await Departure.findOneAndUpdate(
+        {
+          _id: departureData._id,
 
-    await departureData.save({
-      session,
-    });
+          status: "open",
+
+          departureDate: {
+            $gt: new Date(),
+          },
+
+          $expr: {
+            $lte: [
+              {
+                $add: [
+                  "$bookedSeats",
+                  travelers,
+                ],
+              },
+              "$capacity",
+            ],
+          },
+        },
+        {
+          $inc: {
+            bookedSeats:
+              travelers,
+          },
+        },
+        {
+          new: true,
+          session,
+        }
+      );
+
+    if (!updatedDeparture) {
+      await session.abortTransaction();
+
+      return res.status(409).json({
+        message:
+          "The requested seats are no longer available. Please select another departure or reduce the number of travelers.",
+      });
+    }
+
+    // --------------------------------------------------
+    // Mark Departure Full When Necessary
+    // --------------------------------------------------
+
+    if (
+      updatedDeparture.bookedSeats >=
+      updatedDeparture.capacity
+    ) {
+      updatedDeparture.status =
+        "full";
+
+      await updatedDeparture.save({
+        session,
+      });
+    }
 
     // --------------------------------------------------
     // Commit Transaction
@@ -257,26 +362,54 @@ const createBooking = async (req, res) => {
       )
         .populate(
           "tourPackage",
-          "title description imageUrl duration pricePerPerson"
+          "title description imageUrl duration pricePerPerson groupLimit"
         )
         .populate(
           "departure",
           "departureDate capacity bookedSeats status"
         );
 
+    // --------------------------------------------------
+    // Return Booking
+    // --------------------------------------------------
+
     return res.status(201).json({
       message:
         "Booking created successfully.",
+
       booking:
         populatedBooking,
     });
   } catch (error) {
-    await session.abortTransaction();
+    // --------------------------------------------------
+    // Rollback Transaction
+    // --------------------------------------------------
+
+    if (
+      session.inTransaction()
+    ) {
+      await session.abortTransaction();
+    }
 
     console.error(
       "Create booking error:",
       error
     );
+
+    // --------------------------------------------------
+    // Duplicate Booking Reference
+    // --------------------------------------------------
+
+    if (
+      error?.code === 11000 &&
+      error?.keyPattern
+        ?.bookingReference
+    ) {
+      return res.status(409).json({
+        message:
+          "A booking reference conflict occurred. Please try again.",
+      });
+    }
 
     return res.status(500).json({
       message:
@@ -296,7 +429,8 @@ const getMyBookings = async (
   res
 ) => {
   try {
-    const userId = req.user.userId;
+    const userId =
+      req.user.userId;
 
     const bookings =
       await Booking.find({
@@ -304,7 +438,7 @@ const getMyBookings = async (
       })
         .populate(
           "tourPackage",
-          "title description imageUrl duration pricePerPerson"
+          "title description imageUrl duration pricePerPerson groupLimit"
         )
         .populate(
           "departure",
@@ -339,8 +473,30 @@ const getBookingById = async (
   res
 ) => {
   try {
-    const userId = req.user.userId;
-    const { id } = req.params;
+    const userId =
+      req.user.userId;
+
+    const { id } =
+      req.params;
+
+    // --------------------------------------------------
+    // Validate Booking ID
+    // --------------------------------------------------
+
+    if (
+      !mongoose.Types.ObjectId.isValid(
+        id
+      )
+    ) {
+      return res.status(400).json({
+        message:
+          "Invalid booking ID.",
+      });
+    }
+
+    // --------------------------------------------------
+    // Find User's Booking
+    // --------------------------------------------------
 
     const booking =
       await Booking.findOne({
@@ -349,7 +505,7 @@ const getBookingById = async (
       })
         .populate(
           "tourPackage",
-          "title description imageUrl duration pricePerPerson"
+          "title description imageUrl duration pricePerPerson groupLimit"
         )
         .populate(
           "departure",

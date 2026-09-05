@@ -548,20 +548,22 @@ async function googleCallback(req, res) {
       refreshToken
     );
 
-    return res.status(200).json({
-      message: "Google login successful.",
+    /*
+     * Google OAuth has completed successfully.
+     *
+     * The refresh token is already stored in the
+     * HttpOnly cookie above. Do not put the access
+     * token in the redirect URL. The React callback
+     * page will call /api/auth/refresh using the
+     * refresh cookie and establish the frontend session.
+     */
+    const frontendUrl =
+      process.env.FRONTEND_URL ||
+      "http://localhost:5173";
 
-      token: accessToken,
-
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        authProvider: user.authProvider,
-        emailVerified: user.emailVerified,
-        role: user.role,
-      },
-    });
+    return res.redirect(
+      `${frontendUrl}/oauth/callback`
+    );
   } catch (error) {
     console.error(
       "Google OAuth callback error:",

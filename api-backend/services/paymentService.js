@@ -17,44 +17,87 @@ const createPaymentOrder = async ({
   bookingId,
   userId,
 }) => {
-  const booking = await Booking.findOne({
-    _id: bookingId,
-    user: userId,
-  });
+  // --------------------------------------------------
+  // Find Booking
+  // --------------------------------------------------
+
+  const booking =
+    await Booking.findOne({
+      _id: bookingId,
+      user: userId,
+    });
 
   if (!booking) {
     const error = new Error(
       "Booking not found."
     );
+
     error.statusCode = 404;
+
     throw error;
   }
 
   // --------------------------------------------------
-  // Validate Booking
+  // Validate Booking Status
   // --------------------------------------------------
 
-  if (booking.status === "cancelled") {
+  if (
+    booking.status ===
+    "cancelled"
+  ) {
     const error = new Error(
       "A cancelled booking cannot be paid for."
     );
+
     error.statusCode = 400;
+
     throw error;
   }
 
-  if (booking.status === "completed") {
+  if (
+    booking.status ===
+    "completed"
+  ) {
     const error = new Error(
       "A completed booking does not require payment."
     );
+
     error.statusCode = 400;
+
     throw error;
   }
 
-  if (booking.status === "confirmed") {
+  if (
+    booking.status ===
+    "confirmed"
+  ) {
     const error = new Error(
       "This booking has already been confirmed."
     );
+
     error.statusCode = 400;
+
+    throw error;
+  }
+
+  // --------------------------------------------------
+  // Validate Booking Amount
+  // --------------------------------------------------
+
+  const amount =
+    booking.totalPrice;
+
+  if (
+    typeof amount !== "number" ||
+    !Number.isFinite(amount) ||
+    amount <= 0
+  ) {
+    const error = new Error(
+      "Booking does not contain a valid payment amount."
+    );
+
+    error.statusCode = 400;
+
     throw error;
   }
 
@@ -72,7 +115,9 @@ const createPaymentOrder = async ({
     const error = new Error(
       "This booking has already been paid for."
     );
+
     error.statusCode = 409;
+
     throw error;
   }
 
@@ -87,8 +132,11 @@ const createPaymentOrder = async ({
       provider: "razorpay",
     });
 
-  if (existingPendingPayment) {
-    let razorpayOrder = null;
+  if (
+    existingPendingPayment
+  ) {
+    let razorpayOrder =
+      null;
 
     if (
       existingPendingPayment.providerOrderId
@@ -108,28 +156,11 @@ const createPaymentOrder = async ({
 
     return {
       booking,
-      payment: existingPendingPayment,
+      payment:
+        existingPendingPayment,
       razorpayOrder,
       reused: true,
     };
-  }
-
-  // --------------------------------------------------
-  // Server-Side Amount
-  // --------------------------------------------------
-
-  const amount = booking.totalPrice;
-
-  if (
-    typeof amount !== "number" ||
-    !Number.isFinite(amount) ||
-    amount <= 0
-  ) {
-    const error = new Error(
-      "Booking does not contain a valid payment amount."
-    );
-    error.statusCode = 400;
-    throw error;
   }
 
   // --------------------------------------------------
@@ -137,36 +168,56 @@ const createPaymentOrder = async ({
   // --------------------------------------------------
 
   const receipt =
-    `booking_${booking._id.toString()}`;
+    booking.bookingReference
+      ? `booking_${booking.bookingReference}`
+      : `booking_${booking._id.toString()}`;
 
   const razorpayOrder =
     await createRazorpayOrder({
       amount,
       currency: "INR",
       receipt,
+
       notes: {
         bookingId:
           booking._id.toString(),
+
+        bookingReference:
+          booking.bookingReference ||
+          "",
+
         userId:
           userId.toString(),
       },
     });
 
   // --------------------------------------------------
-  // Create Internal Payment
+  // Create Internal Payment Record
   // --------------------------------------------------
 
   const payment =
     await Payment.create({
-      booking: booking._id,
+      booking:
+        booking._id,
+
       user: userId,
+
       amount,
+
       currency: "INR",
+
       status: "pending",
-      provider: "razorpay",
+
+      provider:
+        "razorpay",
+
       providerOrderId:
         razorpayOrder.id,
     });
+
+  // --------------------------------------------------
+  // Return Payment Information
+  // --------------------------------------------------
 
   return {
     booking,
@@ -185,6 +236,10 @@ const verifyRazorpayPayment = ({
   paymentId,
   signature,
 }) => {
+  // --------------------------------------------------
+  // Validate Input
+  // --------------------------------------------------
+
   if (
     !orderId ||
     !paymentId ||
@@ -193,18 +248,32 @@ const verifyRazorpayPayment = ({
     const error = new Error(
       "Razorpay payment verification data is incomplete."
     );
+
     error.statusCode = 400;
+
     throw error;
   }
+
+  // --------------------------------------------------
+  // Razorpay Secret
+  // --------------------------------------------------
 
   const secret =
     process.env.RAZORPAY_KEY_SECRET;
 
   if (!secret) {
-    throw new Error(
+    const error = new Error(
       "Razorpay secret is missing from environment variables."
     );
+
+    error.statusCode = 500;
+
+    throw error;
   }
+
+  // --------------------------------------------------
+  // Generate Expected Signature
+  // --------------------------------------------------
 
   const generatedSignature =
     crypto
@@ -216,6 +285,10 @@ const verifyRazorpayPayment = ({
         `${orderId}|${paymentId}`
       )
       .digest("hex");
+
+  // --------------------------------------------------
+  // Compare Signatures Safely
+  // --------------------------------------------------
 
   const signaturesMatch =
     generatedSignature.length ===
@@ -235,7 +308,9 @@ const verifyRazorpayPayment = ({
     const error = new Error(
       "Invalid Razorpay payment signature."
     );
+
     error.statusCode = 400;
+
     throw error;
   }
 
@@ -246,294 +321,437 @@ const verifyRazorpayPayment = ({
 // Confirm Razorpay Payment
 // --------------------------------------------------
 
-const confirmRazorpayPayment = async ({
-  userId,
-  paymentId,
-  razorpayOrderId,
-  razorpayPaymentId,
-  razorpaySignature,
-}) => {
-  // --------------------------------------------------
-  // Verify Signature
-  // --------------------------------------------------
+const confirmRazorpayPayment =
+  async ({
+    userId,
+    paymentId,
+    razorpayOrderId,
+    razorpayPaymentId,
+    razorpaySignature,
+  }) => {
+    // --------------------------------------------------
+    // Validate Required Input
+    // --------------------------------------------------
 
-  verifyRazorpayPayment({
-    orderId:
-      razorpayOrderId,
-    paymentId:
-      razorpayPaymentId,
-    signature:
-      razorpaySignature,
-  });
+    if (!paymentId) {
+      const error = new Error(
+        "Payment ID is required."
+      );
 
-  // --------------------------------------------------
-  // Find Internal Payment
-  // --------------------------------------------------
+      error.statusCode = 400;
 
-  const payment =
-    await Payment.findOne({
-      _id: paymentId,
-      user: userId,
-      provider: "razorpay",
-    });
+      throw error;
+    }
 
-  if (!payment) {
-    const error = new Error(
-      "Payment not found."
-    );
-    error.statusCode = 404;
-    throw error;
-  }
+    if (!razorpayOrderId) {
+      const error = new Error(
+        "Razorpay order ID is required."
+      );
 
-  // --------------------------------------------------
-  // Verify Razorpay Order ID
-  // --------------------------------------------------
+      error.statusCode = 400;
 
-  if (
-    payment.providerOrderId !==
-    razorpayOrderId
-  ) {
-    const error = new Error(
-      "Razorpay order does not match the payment."
-    );
-    error.statusCode = 400;
-    throw error;
-  }
+      throw error;
+    }
 
-  // --------------------------------------------------
-  // Prevent Duplicate Completion
-  // --------------------------------------------------
+    if (!razorpayPaymentId) {
+      const error = new Error(
+        "Razorpay payment ID is required."
+      );
 
-  if (payment.status === "paid") {
-    const error = new Error(
-      "This payment has already been completed."
-    );
-    error.statusCode = 409;
-    throw error;
-  }
+      error.statusCode = 400;
 
-  if (payment.status === "refunded") {
-    const error = new Error(
-      "A refunded payment cannot be completed again."
-    );
-    error.statusCode = 400;
-    throw error;
-  }
+      throw error;
+    }
 
-  // --------------------------------------------------
-  // Fetch Razorpay Order
-  // --------------------------------------------------
+    if (!razorpaySignature) {
+      const error = new Error(
+        "Razorpay payment signature is required."
+      );
 
-  const razorpayOrder =
-    await fetchRazorpayOrder(
-      razorpayOrderId
-    );
+      error.statusCode = 400;
 
-  // --------------------------------------------------
-  // Verify Order Amount
-  // --------------------------------------------------
+      throw error;
+    }
 
-  const expectedAmount =
-    Math.round(
-      payment.amount * 100
-    );
+    // --------------------------------------------------
+    // Find Internal Payment
+    // --------------------------------------------------
 
-  if (
-    razorpayOrder.amount !==
-    expectedAmount
-  ) {
-    const error = new Error(
-      "Razorpay order amount does not match the payment amount."
-    );
-    error.statusCode = 400;
-    throw error;
-  }
+    const payment =
+      await Payment.findOne({
+        _id: paymentId,
 
-  // --------------------------------------------------
-  // Verify Currency
-  // --------------------------------------------------
+        user: userId,
 
-  if (
-    razorpayOrder.currency !==
-    payment.currency
-  ) {
-    const error = new Error(
-      "Razorpay order currency does not match the payment currency."
-    );
-    error.statusCode = 400;
-    throw error;
-  }
+        provider:
+          "razorpay",
+      });
 
-  // --------------------------------------------------
-  // Verify Razorpay Order Status
-  // --------------------------------------------------
+    if (!payment) {
+      const error = new Error(
+        "Payment not found."
+      );
 
-  if (
-    razorpayOrder.status !==
-      "created" &&
-    razorpayOrder.status !==
-      "attempted" &&
-    razorpayOrder.status !==
+      error.statusCode = 404;
+
+      throw error;
+    }
+
+    // --------------------------------------------------
+    // Verify Internal Payment Status
+    // --------------------------------------------------
+
+    if (
+      payment.status ===
       "paid"
-  ) {
-    const error = new Error(
-      "Razorpay order is not in a valid payment state."
-    );
-    error.statusCode = 400;
-    throw error;
-  }
+    ) {
+      const error = new Error(
+        "This payment has already been completed."
+      );
 
-  // --------------------------------------------------
-  // Fetch Actual Razorpay Payment
-  // --------------------------------------------------
+      error.statusCode = 409;
 
-  const razorpayPayment =
-    await fetchRazorpayPayment(
-      razorpayPaymentId
-    );
+      throw error;
+    }
 
-  // --------------------------------------------------
-  // Verify Payment Belongs to Order
-  // --------------------------------------------------
+    if (
+      payment.status ===
+      "refunded"
+    ) {
+      const error = new Error(
+        "A refunded payment cannot be completed again."
+      );
 
-  if (
-    razorpayPayment.order_id !==
-    razorpayOrderId
-  ) {
-    const error = new Error(
-      "Razorpay payment does not belong to the specified order."
-    );
-    error.statusCode = 400;
-    throw error;
-  }
+      error.statusCode = 400;
 
-  // --------------------------------------------------
-  // Verify Payment Amount
-  // --------------------------------------------------
+      throw error;
+    }
 
-  if (
-    razorpayPayment.amount !==
-    expectedAmount
-  ) {
-    const error = new Error(
-      "Razorpay payment amount does not match the payment amount."
-    );
-    error.statusCode = 400;
-    throw error;
-  }
+    // --------------------------------------------------
+    // Verify Razorpay Order ID
+    // --------------------------------------------------
 
-  // --------------------------------------------------
-  // Verify Payment Currency
-  // --------------------------------------------------
+    if (
+      payment.providerOrderId !==
+      razorpayOrderId
+    ) {
+      const error = new Error(
+        "Razorpay order does not match the payment."
+      );
 
-  if (
-    razorpayPayment.currency !==
-    payment.currency
-  ) {
-    const error = new Error(
-      "Razorpay payment currency does not match the payment currency."
-    );
-    error.statusCode = 400;
-    throw error;
-  }
+      error.statusCode = 400;
 
-  // --------------------------------------------------
-  // Require Captured Payment
-  // --------------------------------------------------
+      throw error;
+    }
 
-  if (
-    razorpayPayment.status !==
-    "captured"
-  ) {
-    const error = new Error(
-      `Razorpay payment is not captured. Current status: ${razorpayPayment.status}.`
-    );
-    error.statusCode = 400;
-    throw error;
-  }
+    // --------------------------------------------------
+    // Verify Razorpay Signature
+    // --------------------------------------------------
 
-  // --------------------------------------------------
-  // Find Booking
-  // --------------------------------------------------
+    verifyRazorpayPayment({
+      orderId:
+        razorpayOrderId,
 
-  const booking =
-    await Booking.findOne({
-      _id: payment.booking,
-      user: userId,
+      paymentId:
+        razorpayPaymentId,
+
+      signature:
+        razorpaySignature,
     });
 
-  if (!booking) {
-    const error = new Error(
-      "Booking associated with this payment was not found."
-    );
-    error.statusCode = 404;
-    throw error;
-  }
+    // --------------------------------------------------
+    // Find Booking
+    // --------------------------------------------------
 
-  // --------------------------------------------------
-  // Validate Booking
-  // --------------------------------------------------
+    const booking =
+      await Booking.findOne({
+        _id:
+          payment.booking,
 
-  if (booking.status === "cancelled") {
-    const error = new Error(
-      "Payment cannot be completed for a cancelled booking."
-    );
-    error.statusCode = 400;
-    throw error;
-  }
+        user: userId,
+      });
 
-  if (booking.status === "completed") {
-    const error = new Error(
-      "Payment cannot be completed for a completed booking."
-    );
-    error.statusCode = 400;
-    throw error;
-  }
+    if (!booking) {
+      const error = new Error(
+        "Booking associated with this payment was not found."
+      );
 
-  // --------------------------------------------------
-  // Final Amount Integrity Check
-  // --------------------------------------------------
+      error.statusCode = 404;
 
-  if (
-    payment.amount !==
-    booking.totalPrice
-  ) {
-    const error = new Error(
-      "Payment amount does not match the booking total."
-    );
-    error.statusCode = 409;
-    throw error;
-  }
+      throw error;
+    }
 
-  // --------------------------------------------------
-  // Mark Payment Paid
-  // --------------------------------------------------
+    // --------------------------------------------------
+    // Validate Booking Status
+    // --------------------------------------------------
 
-  payment.status = "paid";
+    if (
+      booking.status ===
+      "cancelled"
+    ) {
+      const error = new Error(
+        "Payment cannot be completed for a cancelled booking."
+      );
 
-  payment.providerPaymentId =
-    razorpayPaymentId;
+      error.statusCode = 400;
 
-  payment.providerSignature =
-    razorpaySignature;
+      throw error;
+    }
 
-  payment.paidAt = new Date();
+    if (
+      booking.status ===
+      "completed"
+    ) {
+      const error = new Error(
+        "Payment cannot be completed for a completed booking."
+      );
 
-  await payment.save();
+      error.statusCode = 400;
 
-  // --------------------------------------------------
-  // Confirm Booking
-  // --------------------------------------------------
+      throw error;
+    }
 
-  booking.status = "confirmed";
+    if (
+      booking.status ===
+      "confirmed"
+    ) {
+      const error = new Error(
+        "This booking has already been confirmed."
+      );
 
-  await booking.save();
+      error.statusCode = 409;
 
-  return {
-    payment,
-    booking,
+      throw error;
+    }
+
+    // --------------------------------------------------
+    // Final Amount Integrity Check
+    // --------------------------------------------------
+
+    if (
+      payment.amount !==
+      booking.totalPrice
+    ) {
+      const error = new Error(
+        "Payment amount does not match the booking total."
+      );
+
+      error.statusCode = 409;
+
+      throw error;
+    }
+
+    // --------------------------------------------------
+    // Fetch Razorpay Order
+    // --------------------------------------------------
+
+    const razorpayOrder =
+      await fetchRazorpayOrder(
+        razorpayOrderId
+      );
+
+    // --------------------------------------------------
+    // Verify Order Amount
+    // --------------------------------------------------
+
+    const expectedAmount =
+      Math.round(
+        payment.amount * 100
+      );
+
+    if (
+      razorpayOrder.amount !==
+      expectedAmount
+    ) {
+      const error = new Error(
+        "Razorpay order amount does not match the payment amount."
+      );
+
+      error.statusCode = 400;
+
+      throw error;
+    }
+
+    // --------------------------------------------------
+    // Verify Order Currency
+    // --------------------------------------------------
+
+    if (
+      razorpayOrder.currency !==
+      payment.currency
+    ) {
+      const error = new Error(
+        "Razorpay order currency does not match the payment currency."
+      );
+
+      error.statusCode = 400;
+
+      throw error;
+    }
+
+    // --------------------------------------------------
+    // Verify Razorpay Order Status
+    // --------------------------------------------------
+
+    if (
+      razorpayOrder.status !==
+        "created" &&
+      razorpayOrder.status !==
+        "attempted" &&
+      razorpayOrder.status !==
+        "paid"
+    ) {
+      const error = new Error(
+        "Razorpay order is not in a valid payment state."
+      );
+
+      error.statusCode = 400;
+
+      throw error;
+    }
+
+    // --------------------------------------------------
+    // Fetch Actual Razorpay Payment
+    // --------------------------------------------------
+
+    const razorpayPayment =
+      await fetchRazorpayPayment(
+        razorpayPaymentId
+      );
+
+    // --------------------------------------------------
+    // Verify Payment Belongs To Order
+    // --------------------------------------------------
+
+    if (
+      razorpayPayment.order_id !==
+      razorpayOrderId
+    ) {
+      const error = new Error(
+        "Razorpay payment does not belong to the specified order."
+      );
+
+      error.statusCode = 400;
+
+      throw error;
+    }
+
+    // --------------------------------------------------
+    // Verify Payment Amount
+    // --------------------------------------------------
+
+    if (
+      razorpayPayment.amount !==
+      expectedAmount
+    ) {
+      const error = new Error(
+        "Razorpay payment amount does not match the payment amount."
+      );
+
+      error.statusCode = 400;
+
+      throw error;
+    }
+
+    // --------------------------------------------------
+    // Verify Payment Currency
+    // --------------------------------------------------
+
+    if (
+      razorpayPayment.currency !==
+      payment.currency
+    ) {
+      const error = new Error(
+        "Razorpay payment currency does not match the payment currency."
+      );
+
+      error.statusCode = 400;
+
+      throw error;
+    }
+
+    // --------------------------------------------------
+    // Require Captured Payment
+    // --------------------------------------------------
+
+    if (
+      razorpayPayment.status !==
+      "captured"
+    ) {
+      const error = new Error(
+        `Razorpay payment is not captured. Current status: ${razorpayPayment.status}.`
+      );
+
+      error.statusCode = 400;
+
+      throw error;
+    }
+
+    // --------------------------------------------------
+    // Mark Internal Payment As Paid
+    // --------------------------------------------------
+
+    payment.status =
+      "paid";
+
+    payment.providerPaymentId =
+      razorpayPaymentId;
+
+    payment.providerSignature =
+      razorpaySignature;
+
+    payment.paidAt =
+      new Date();
+
+    await payment.save();
+
+    // --------------------------------------------------
+    // Confirm Booking
+    // --------------------------------------------------
+
+    booking.status =
+      "confirmed";
+
+    await booking.save();
+
+    // --------------------------------------------------
+    // Return Populated Data
+    // --------------------------------------------------
+
+    const updatedPayment =
+      await Payment.findById(
+        payment._id
+      )
+        .populate(
+          "booking",
+          "bookingReference tourPackage departure travelers pricePerPersonAtBooking totalPrice status createdAt"
+        )
+        .populate(
+          "user",
+          "name email"
+        );
+
+    const updatedBooking =
+      await Booking.findById(
+        booking._id
+      )
+        .populate(
+          "tourPackage",
+          "title description imageUrl duration pricePerPerson"
+        )
+        .populate(
+          "departure",
+          "departureDate capacity bookedSeats status"
+        );
+
+    return {
+      payment:
+        updatedPayment,
+
+      booking:
+        updatedBooking,
+    };
   };
-};
 
 // --------------------------------------------------
 // Exports

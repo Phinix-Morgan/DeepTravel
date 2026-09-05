@@ -18,21 +18,21 @@ const router = express.Router();
 router.use(authMiddleware);
 
 // --------------------------------------------------
-// Create Razorpay Payment Order
-// --------------------------------------------------
-
-router.post(
-  "/:bookingId",
-  createPayment
-);
-
-// --------------------------------------------------
 // Verify Razorpay Payment
 // --------------------------------------------------
 
 router.post(
   "/verify",
   verifyPayment
+);
+
+// --------------------------------------------------
+// Create Razorpay Payment Order
+// --------------------------------------------------
+
+router.post(
+  "/:bookingId",
+  createPayment
 );
 
 // --------------------------------------------------
