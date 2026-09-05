@@ -11,7 +11,7 @@ const packageRoutes = require("./routes/packages");
 const authRoutes = require("./routes/auth");
 const customTripRoutes = require("./routes/customTrips");
 const customTripBookingRoutes = require("./routes/customTripBooking");
-const adminCustomTripRoutes = require("./routes/adminCustomTrips");
+const adminRoutes = require("./routes/admin");
 const bookingRoutes = require("./routes/bookings");
 const paymentRoutes = require("./routes/payments");
 
@@ -139,12 +139,12 @@ app.use(
 );
 
 // --------------------------------------------------
-// Admin Custom Trip Routes
+// Admin Routes
 // --------------------------------------------------
 
 app.use(
-  "/api/admin/custom-trips",
-  adminCustomTripRoutes
+  "/api/admin",
+  adminRoutes
 );
 
 // --------------------------------------------------
