@@ -1,3 +1,5 @@
+import { apiRequest } from "./apiClient";
+
 const RAW_API_URL =
   import.meta.env.VITE_API_URL ||
   "http://localhost:5000";
@@ -110,10 +112,14 @@ export function loginUser({
 // Current User
 // --------------------------------------------------
 
-export function getCurrentUser(token) {
-  return request("/auth/me", {
+export function getCurrentUser(
+  token,
+  { retryOnUnauthorized = true } = {}
+) {
+  return apiRequest("/auth/me", {
     method: "GET",
     token,
+    retryOnUnauthorized,
   });
 }
 
@@ -147,10 +153,9 @@ export function logoutUser() {
 // --------------------------------------------------
 
 export function logoutAllSessions(token) {
-  return request("/auth/logout-all", {
+  return apiRequest("/auth/logout-all", {
     method: "POST",
     token,
-    credentials: true,
   });
 }
 
@@ -220,7 +225,7 @@ export function changePassword(
   currentPassword,
   newPassword
 ) {
-  return request(
+  return apiRequest(
     "/auth/change-password",
     {
       method: "POST",

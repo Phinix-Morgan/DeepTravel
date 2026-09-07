@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -13,6 +14,11 @@ import {
   refreshAccessToken,
   registerUser,
 } from "../services/auth";
+
+import {
+  registerAuthRefreshHandler,
+  setAuthAccessToken,
+} from "../services/apiClient";
 
 const AuthContext = createContext(null);
 
@@ -35,6 +41,9 @@ export function AuthProvider({
   const [loading, setLoading] =
     useState(true);
 
+  const refreshSessionPromiseRef = useRef(null);
+  const sessionGenerationRef = useRef(0);
+
 
   // --------------------------------------------------
   // Save Access Token
@@ -51,6 +60,7 @@ export function AuthProvider({
         accessToken
       );
 
+      setAuthAccessToken(accessToken);
       setToken(accessToken);
     },
     []
@@ -62,10 +72,14 @@ export function AuthProvider({
   // --------------------------------------------------
 
   const clearAuth = useCallback(() => {
+    sessionGenerationRef.current += 1;
+    refreshSessionPromiseRef.current = null;
+
     localStorage.removeItem(
       TOKEN_KEY
     );
 
+    setAuthAccessToken(null);
     setToken(null);
     setUser(null);
   }, []);
@@ -75,37 +89,75 @@ export function AuthProvider({
   // Refresh Session
   // --------------------------------------------------
 
-  const refreshSession =
-    useCallback(async () => {
-      const response =
-        await refreshAccessToken();
+  const refreshSession = useCallback(() => {
+    if (!refreshSessionPromiseRef.current) {
+      const generation = sessionGenerationRef.current;
 
-      if (!response?.token) {
-        throw new Error(
-          "Refresh token response did not contain an access token."
-        );
-      }
+      refreshSessionPromiseRef.current = (async () => {
+        try {
+          const response = await refreshAccessToken();
 
-      saveToken(response.token);
+          if (!response?.token) {
+            throw new Error(
+              "Refresh token response did not contain an access token."
+            );
+          }
 
-      const meResponse =
-        await getCurrentUser(
-          response.token
-        );
+          // Do not recurse into the API client's 401 recovery while it is
+          // already performing the refresh workflow.
+          const meResponse = await getCurrentUser(response.token, {
+            retryOnUnauthorized: false,
+          });
 
-      if (!meResponse?.user) {
-        throw new Error(
-          "Unable to restore the authenticated user."
-        );
-      }
+          if (!meResponse?.user) {
+            throw new Error(
+              "Unable to restore the authenticated user."
+            );
+          }
 
-      setUser(meResponse.user);
+          // Logout can occur while the refresh request is in flight. Never
+          // let that late response resurrect the previous session.
+          if (generation !== sessionGenerationRef.current) {
+            throw new Error("Authentication session was cleared.");
+          }
 
-      return {
-        token: response.token,
-        user: meResponse.user,
-      };
-    }, [saveToken]);
+          saveToken(response.token);
+          setUser(meResponse.user);
+
+          return {
+            token: response.token,
+            user: meResponse.user,
+          };
+        } catch (error) {
+          // Invalid, expired, revoked, or deleted refresh sessions are final.
+          // Network and server failures retain the current session state.
+          if (
+            generation === sessionGenerationRef.current &&
+            (error?.status === 401 || error?.status === 404)
+          ) {
+            clearAuth();
+          }
+
+          throw error;
+        }
+      })().finally(() => {
+        refreshSessionPromiseRef.current = null;
+      });
+    }
+
+    return refreshSessionPromiseRef.current;
+  }, [clearAuth, saveToken]);
+
+
+  // --------------------------------------------------
+  // Register API Refresh Handler
+  // --------------------------------------------------
+
+  useEffect(() => {
+    return registerAuthRefreshHandler(
+      refreshSession
+    );
+  }, [refreshSession]);
 
 
   // --------------------------------------------------
@@ -127,12 +179,11 @@ export function AuthProvider({
         if (storedToken) {
           try {
             const response =
-              await getCurrentUser(
-                storedToken
-              );
+              await getCurrentUser(storedToken, {
+                retryOnUnauthorized: false,
+              });
 
             if (response?.user) {
-              setToken(storedToken);
               setUser(response.user);
 
               return;
@@ -145,7 +196,6 @@ export function AuthProvider({
              */
 
             if (error.status !== 401) {
-              clearAuth();
               return;
             }
           }
@@ -159,15 +209,15 @@ export function AuthProvider({
         try {
           await refreshSession();
         } catch {
-          clearAuth();
+          // refreshSession clears only invalid/expired/revoked sessions. A
+          // transient backend/network error intentionally preserves state.
         }
       } finally {
         setLoading(false);
       }
     }, [
-      clearAuth,
-      refreshSession,
-    ]);
+    refreshSession,
+  ]);
 
 
   // --------------------------------------------------

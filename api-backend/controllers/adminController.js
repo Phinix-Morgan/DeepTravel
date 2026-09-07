@@ -362,13 +362,127 @@ async function updateBookingStatus(req, res) {
 async function listPayments(req, res) {
   try {
     const filter = {};
-    if (req.query.status) { if (!PAYMENT_STATUSES.includes(req.query.status)) return res.status(400).json({ message: "Invalid payment status." }); filter.status = req.query.status; }
-    for (const key of ["booking", "user"]) { if (req.query[key]) { if (!requireValidId(res, req.query[key], key)) return; filter[key] = req.query[key]; } }
-    if (req.query.from || req.query.to) { filter.createdAt = {}; if (req.query.from) filter.createdAt.$gte = new Date(req.query.from); if (req.query.to) filter.createdAt.$lte = new Date(req.query.to); }
-    const { page, limit, skip } = pagination(req.query);
-    const [payments, total] = await Promise.all([Payment.find(filter).select("-providerSignature").populate("user", SAFE_USER_FIELDS).populate("booking", "bookingReference travelers totalPrice status tourPackage departure").sort({ createdAt: -1 }).skip(skip).limit(limit).lean(), Payment.countDocuments(filter)]);
-    return res.status(200).json(pageResponse(payments, total, page, limit, "payments"));
-  } catch (error) { return handleError(res, error, "Unable to retrieve payments."); }
+
+    if (req.query.status) {
+      if (!PAYMENT_STATUSES.includes(req.query.status)) {
+        return res.status(400).json({
+          message: "Invalid payment status.",
+        });
+      }
+
+      filter.status = req.query.status;
+    }
+
+    for (const key of ["booking", "user"]) {
+      if (req.query[key]) {
+        if (!requireValidId(res, req.query[key], key)) {
+          return;
+        }
+
+        filter[key] = req.query[key];
+      }
+    }
+
+    if (req.query.search) {
+      const search = new RegExp(
+        escapeRegex(req.query.search),
+        "i"
+      );
+
+      const [users, bookings] =
+        await Promise.all([
+          User.find({
+            $or: [
+              { name: search },
+              { email: search },
+            ],
+          })
+            .select("_id")
+            .lean(),
+
+          Booking.find({
+            bookingReference: search,
+          })
+            .select("_id")
+            .lean(),
+        ]);
+
+      filter.$or = [
+        { provider: search },
+        { providerOrderId: search },
+        { providerPaymentId: search },
+        {
+          user: {
+            $in: users.map(
+              (user) => user._id
+            ),
+          },
+        },
+        {
+          booking: {
+            $in: bookings.map(
+              (booking) => booking._id
+            ),
+          },
+        },
+      ];
+    }
+
+    if (req.query.from || req.query.to) {
+      filter.createdAt = {};
+
+      if (req.query.from) {
+        filter.createdAt.$gte = new Date(
+          req.query.from
+        );
+      }
+
+      if (req.query.to) {
+        filter.createdAt.$lte = new Date(
+          req.query.to
+        );
+      }
+    }
+
+    const { page, limit, skip } =
+      pagination(req.query);
+
+    const [payments, total] =
+      await Promise.all([
+        Payment.find(filter)
+          .select("-providerSignature")
+          .populate(
+            "user",
+            SAFE_USER_FIELDS
+          )
+          .populate(
+            "booking",
+            "bookingReference travelers totalPrice status tourPackage departure"
+          )
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+
+        Payment.countDocuments(filter),
+      ]);
+
+    return res.status(200).json(
+      pageResponse(
+        payments,
+        total,
+        page,
+        limit,
+        "payments"
+      )
+    );
+  } catch (error) {
+    return handleError(
+      res,
+      error,
+      "Unable to retrieve payments."
+    );
+  }
 }
 
 async function getPayment(req, res) {

@@ -22,6 +22,16 @@ import TripDetails from "./pages/TripDetails";
 import PackageDetails from "./pages/PackageDetails";
 import CustomTripBuilder from "./pages/CustomTripBuilder";
 import CustomTripDetails from "./pages/CustomTripDetails";
+import AdminRoute from "./components/AdminRoute";
+import AdminLayout from "./layouts/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminCustomTrips from "./pages/admin/AdminCustomTrips";
+import AdminDestinations from "./pages/admin/AdminDestinations";
+import AdminPackages from "./pages/admin/AdminPackages";
+import AdminDepartures from "./pages/admin/AdminDepartures";
+import AdminBookings from "./pages/admin/AdminBookings";
+import AdminPayments from "./pages/admin/AdminPayments";
+import AdminUsers from "./pages/admin/AdminUsers";
 
 
 
@@ -184,6 +194,19 @@ function App() {
 
           </Route>
 
+        </Route>
+
+        <Route element={<AdminRoute />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/custom-trips" element={<AdminCustomTrips />} />
+            <Route path="/admin/destinations" element={<AdminDestinations />} />
+            <Route path="/admin/packages" element={<AdminPackages />} />
+            <Route path="/admin/departures" element={<AdminDepartures />} />
+            <Route path="/admin/bookings" element={<AdminBookings />} />
+            <Route path="/admin/payments" element={<AdminPayments />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+          </Route>
         </Route>
 
       </Routes>

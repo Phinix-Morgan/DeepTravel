@@ -168,7 +168,6 @@ function TripDetails() {
   const {
     token,
     loading: authLoading,
-    refreshSession,
   } = useAuth();
 
   const [booking, setBooking] =
@@ -279,115 +278,6 @@ function TripDetails() {
   }
 
   // ==================================================
-  // Create Payment Order With Token Refresh
-  // ==================================================
-
-  async function createOrderWithRefresh(
-    bookingId,
-    currentToken
-  ) {
-    try {
-      const result = await createPaymentOrder(
-        bookingId,
-        currentToken
-      );
-      return {
-        ...result,
-        activeToken: currentToken,
-      };
-    } catch (err) {
-      // ----------------------------------------------
-      // Access token expired
-      // ----------------------------------------------
-
-      if (err?.status !== 401) {
-        throw err;
-      }
-
-      console.warn(
-        "Payment request returned 401. Refreshing access token..."
-      );
-
-      // ----------------------------------------------
-      // Refresh HttpOnly refresh-token cookie
-      // ----------------------------------------------
-
-      const refreshed =
-        await refreshSession();
-
-      if (!refreshed?.token) {
-        throw new Error(
-          "Your session has expired. Please log in again."
-        );
-      }
-
-      // ----------------------------------------------
-      // Retry payment request with fresh token
-      // ----------------------------------------------
-
-      const result = await createPaymentOrder(
-        bookingId,
-        refreshed.token
-      );
-
-      return {
-        ...result,
-        activeToken: refreshed.token,
-      };
-    }
-  }
-
-  // ==================================================
-  // Verify Payment With Token Refresh
-  // ==================================================
-
-  async function verifyPaymentWithRefresh(
-    paymentData,
-    currentToken
-  ) {
-    try {
-      return await verifyPayment({
-        ...paymentData,
-        token: currentToken,
-      });
-    } catch (err) {
-      // ----------------------------------------------
-      // Access token expired
-      // ----------------------------------------------
-
-      if (err?.status !== 401) {
-        throw err;
-      }
-
-      console.warn(
-        "Payment verification returned 401. Refreshing access token..."
-      );
-
-      // ----------------------------------------------
-      // Refresh session
-      // ----------------------------------------------
-
-      const refreshed =
-        await refreshSession();
-
-      if (!refreshed?.token) {
-        throw new Error(
-          "Your session has expired. Please log in again."
-        );
-      }
-
-      // ----------------------------------------------
-      // Retry verification with fresh token
-      // ----------------------------------------------
-
-      return await verifyPayment({
-        ...paymentData,
-        token: refreshed.token,
-      });
-    }
-  }
-
-  // ==================================================
   // Pay For Booking
   // ==================================================
 
@@ -435,17 +325,11 @@ function TripDetails() {
       // refreshes it and retries automatically.
       //
 
-      let activeToken = token;
-
       const paymentResponse =
-        await createOrderWithRefresh(
+        await createPaymentOrder(
           booking._id,
           token
         );
-
-      if (paymentResponse?.activeToken) {
-        activeToken = paymentResponse.activeToken;
-      }
 
       const payment =
         paymentResponse?.payment;
@@ -524,25 +408,24 @@ function TripDetails() {
               // ------------------------------------------
 
               const verification =
-                await verifyPaymentWithRefresh(
-                  {
-                    paymentId:
-                      payment._id,
+                await verifyPayment({
+                  paymentId:
+                    payment._id,
 
-                    razorpayOrderId:
-                      response
-                        .razorpay_order_id,
+                  razorpayOrderId:
+                    response
+                      .razorpay_order_id,
 
-                    razorpayPaymentId:
-                      response
-                        .razorpay_payment_id,
+                  razorpayPaymentId:
+                    response
+                      .razorpay_payment_id,
 
-                    razorpaySignature:
-                      response
-                        .razorpay_signature,
-                  },
-                  activeToken
-                );
+                  razorpaySignature:
+                    response
+                      .razorpay_signature,
+
+                  token,
+                });
 
               // ------------------------------------------
               // Booking Confirmed

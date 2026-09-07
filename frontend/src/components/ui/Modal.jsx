@@ -16,8 +16,21 @@ export function Modal({
   const modalRef = useRef(null);
   const previousActiveRef = useRef(null);
   const previousOverflowRef = useRef("");
+  const onCloseRef = useRef(onClose);
+  const closeOnEscRef = useRef(closeOnEsc);
+
   const titleId = useId();
   const descriptionId = useId();
+
+  // Keep the latest callback/options available without
+  // causing the modal lifecycle effect to restart.
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    closeOnEscRef.current = closeOnEsc;
+  }, [closeOnEsc]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -28,15 +41,17 @@ export function Modal({
 
     const modal = modalRef.current;
 
+    // Focus the modal only when it actually opens.
+    // Do not repeat this when the parent rerenders.
     if (modal) {
       modal.focus();
     }
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
-        if (closeOnEsc) {
+        if (closeOnEscRef.current) {
           event.stopPropagation();
-          onClose?.();
+          onCloseRef.current?.();
         }
         return;
       }
@@ -54,12 +69,19 @@ export function Modal({
       }
 
       const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
+      const lastElement =
+        focusableElements[focusableElements.length - 1];
 
-      if (event.shiftKey && document.activeElement === firstElement) {
+      if (
+        event.shiftKey &&
+        document.activeElement === firstElement
+      ) {
         event.preventDefault();
         lastElement.focus();
-      } else if (!event.shiftKey && document.activeElement === lastElement) {
+      } else if (
+        !event.shiftKey &&
+        document.activeElement === lastElement
+      ) {
         event.preventDefault();
         firstElement.focus();
       }
@@ -78,13 +100,16 @@ export function Modal({
         previousActiveRef.current.focus();
       }
     };
-  }, [isOpen, closeOnEsc, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   function handleBackdropClick(event) {
-    if (closeOnOverlayClick && event.target === event.currentTarget) {
-      onClose?.();
+    if (
+      closeOnOverlayClick &&
+      event.target === event.currentTarget
+    ) {
+      onCloseRef.current?.();
     }
   }
 
@@ -120,7 +145,10 @@ export function Modal({
               )}
 
               {description && (
-                <p id={descriptionId} className="dt-modal__description">
+                <p
+                  id={descriptionId}
+                  className="dt-modal__description"
+                >
                   {description}
                 </p>
               )}
@@ -130,7 +158,7 @@ export function Modal({
               <button
                 type="button"
                 className="dt-modal__close"
-                onClick={onClose}
+                onClick={() => onCloseRef.current?.()}
                 aria-label="Close modal"
               >
                 ✕
@@ -141,7 +169,9 @@ export function Modal({
 
         <div className="dt-modal__body">{children}</div>
 
-        {footer && <div className="dt-modal__footer">{footer}</div>}
+        {footer && (
+          <div className="dt-modal__footer">{footer}</div>
+        )}
       </div>
     </div>
   );

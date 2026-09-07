@@ -1,72 +1,11 @@
-const RAW_API_URL =
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:5000";
-
-const API_BASE_URL =
-  `${RAW_API_URL.replace(/\/api\/?$/, "").replace(/\/+$/, "")}/api`;
+import { apiRequest } from "./apiClient";
 
 // --------------------------------------------------
 // Generic Booking / Payment Request
 // --------------------------------------------------
 
-async function request(
-  endpoint,
-  options = {}
-) {
-  const {
-    method = "GET",
-    body,
-    token,
-  } = options;
-
-  const headers = {};
-
-  if (body) {
-    headers["Content-Type"] =
-      "application/json";
-  }
-
-  if (token) {
-    headers.Authorization =
-      `Bearer ${token}`;
-  }
-
-  const response = await fetch(
-    `${API_BASE_URL}${endpoint}`,
-    {
-      method,
-      headers,
-      credentials: "include",
-      body: body
-        ? JSON.stringify(body)
-        : undefined,
-    }
-  );
-
-  let data = {};
-
-  try {
-    data = await response.json();
-  } catch {
-    data = {};
-  }
-
-  if (!response.ok) {
-    const error = new Error(
-      data.message ||
-        "Something went wrong."
-    );
-
-    error.status =
-      response.status;
-
-    error.data = data;
-
-    throw error;
-  }
-
-  return data;
-}
+const request = (endpoint, options = {}) =>
+  apiRequest(endpoint, options);
 
 
 // ==================================================

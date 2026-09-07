@@ -112,6 +112,19 @@ function Navbar() {
               {item.label}
             </NavLink>
           ))}
+
+          {isAuthenticated && user?.role === "admin" && (
+            <NavLink
+              to="/admin"
+              className={({ isActive }) =>
+                `navbar__link ${
+                  isActive ? "navbar__link--active" : ""
+                }`
+              }
+            >
+              Admin Panel
+            </NavLink>
+          )}
         </nav>
 
 

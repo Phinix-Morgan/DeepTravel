@@ -1,37 +1,7 @@
-const RAW_API_URL =
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:5000";
+import { apiRequest } from "./apiClient";
 
-const API_BASE_URL =
-  `${RAW_API_URL.replace(/\/api\/?$/, "").replace(/\/+$/, "")}/api`;
-
-async function request(endpoint, { method = "GET", body, token } = {}) {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method,
-    credentials: "include",
-    headers: {
-      ...(body ? { "Content-Type": "application/json" } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  let data = {};
-  try {
-    data = await response.json();
-  } catch {
-    // Preserve a useful fallback error below when a response has no JSON body.
-  }
-
-  if (!response.ok) {
-    const error = new Error(data.message || "Something went wrong.");
-    error.status = response.status;
-    error.data = data;
-    throw error;
-  }
-
-  return data;
-}
+const request = (endpoint, options = {}) =>
+  apiRequest(endpoint, options);
 
 export function createCustomTripRequest(payload, token) {
   return request("/custom-trips", {

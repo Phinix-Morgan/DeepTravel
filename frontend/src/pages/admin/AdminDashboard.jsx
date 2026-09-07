@@ -1,0 +1,15 @@
+import { useCallback, useEffect, useState } from "react";
+import { Card, EmptyState, Skeleton, StatusBadge } from "../../components/ui";
+import { useAuth } from "../../context/AuthContext";
+import { getAdminDashboard } from "../../services/admin";
+import { date, money, PageHeading } from "./AdminShared";
+
+export default function AdminDashboard() {
+  const { token } = useAuth(); const [data, setData] = useState(null); const [error, setError] = useState("");
+  const load = useCallback(async () => { try { setError(""); setData(await getAdminDashboard(token)); } catch (err) { setError(err.message); } }, [token]);
+  useEffect(() => { load(); }, [load]);
+  if (error) return <section className="admin-page"><PageHeading title="Dashboard" /><EmptyState title="Dashboard unavailable" description={error} action={<button className="btn btn-primary" onClick={load}>Try again</button>} /></section>;
+  const m = data?.metrics; const recent = data?.recentActivity;
+  return <section className="admin-page"><PageHeading title="Platform overview" description="A live view of the journeys, people, and proposals shaping DeepTravel." />{!m ? <div className="admin-metric-grid">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} height="125px" />)}</div> : <><div className="admin-metric-grid">{[["Travelers",m.totalUsers],["Destinations",m.totalDestinations],["Packages",m.totalTourPackages,`${m.activeTourPackages} active`],["Upcoming departures",m.upcomingDepartures],["Bookings",m.totalBookings,`${m.pendingBookings} pending`],["Confirmed",m.confirmedBookings],["Revenue",money(m.totalRevenue),`${m.paidPayments} paid payments`],["Custom requests",m.pendingCustomTripRequests + m.quotedCustomTripRequests + m.acceptedCustomTripRequests,`${m.quotedCustomTripRequests} quoted`]].map(([label, value, note]) => <Card key={label} padding="md" className="admin-metric"><span>{label}</span><strong>{value}</strong>{note && <small>{note}</small>}</Card>)}</div><div className="admin-activity-grid"><Activity title="Recent bookings" items={recent?.recentBookings} render={(item) => <><strong>{item.bookingReference || "Booking"}</strong><span>{item.user?.name} · {money(item.totalPrice)}</span><StatusBadge status={item.status} /></>} /><Activity title="Custom trip requests" items={recent?.recentCustomTripRequests} render={(item) => <><strong>{item.tourPackage?.title || "Custom journey"}</strong><span>{item.user?.name} · {date(item.preferredStartDate)}</span><StatusBadge status={item.status} /></>} /><Activity title="Recent payments" items={recent?.recentPayments} render={(item) => <><strong>{money(item.amount)} · {item.provider}</strong><span>{item.user?.name} · {item.booking?.bookingReference || "Booking"}</span><StatusBadge status={item.status} /></>} /></div></>}</section>;
+}
+function Activity({ title, items, render }) { return <Card padding="md" className="admin-activity"><h2>{title}</h2>{!items ? <Skeleton height="150px" /> : items.length ? <div>{items.map((item) => <article key={item._id}>{render(item)}</article>)}</div> : <p>No recent activity.</p>}</Card>; }
