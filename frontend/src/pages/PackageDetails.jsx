@@ -73,7 +73,7 @@ function LoadingState() {
       <div className="content-width">
         <div className="package-details__state">
           <span className="eyebrow">
-            DeepTravel
+            Hubsafari
           </span>
 
           <h1 className="display-md">
@@ -571,7 +571,7 @@ function PackageDetails() {
           />
         ) : (
           <div className="package-details__hero-placeholder">
-            DeepTravel
+            Hubsafari
           </div>
         )}
 
@@ -594,7 +594,7 @@ function PackageDetails() {
 
             <span className="eyebrow">
               {destination.name ||
-                "DeepTravel"}
+                "Hubsafari"}
               {destination.country
                 ? ` · ${destination.country}`
                 : ""}

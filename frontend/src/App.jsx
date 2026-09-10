@@ -43,7 +43,7 @@ function Placeholder({ title }) {
     <section className="section">
       <div className="content-width">
         <p className="eyebrow">
-          DeepTravel
+          Hubsafari
         </p>
 
         <h1 className="display-md">
@@ -142,7 +142,7 @@ function App() {
             path="/about"
             element={
               <Placeholder
-                title="About DeepTravel"
+                title="About Hubsafari"
               />
             }
           />

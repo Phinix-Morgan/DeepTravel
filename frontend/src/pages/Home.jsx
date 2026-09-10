@@ -91,7 +91,7 @@ function Home() {
 
           <p className="intro__text text-soft">
             From mountain escapes to quiet coastal retreats,
-            DeepTravel helps you discover journeys designed
+            Hubsafari helps you discover journeys designed
             around the way you actually want to travel.
           </p>
         </div>

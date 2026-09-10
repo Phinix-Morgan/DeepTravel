@@ -2,7 +2,7 @@ import React from "react";
 
 export function EmptyState({
   icon = "✦",
-  eyebrow = "DeepTravel",
+  eyebrow = "Hubsafari",
   title = "No records found",
   description,
   action,

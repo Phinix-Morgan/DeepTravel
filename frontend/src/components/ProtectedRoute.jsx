@@ -20,7 +20,7 @@ export default function ProtectedRoute() {
       <main className="auth-loading">
         <div>
           <p className="eyebrow">
-            DeepTravel
+            Hubsafari
           </p>
 
           <h1>

@@ -198,7 +198,7 @@
 
 
 /* =========================================================
-   DEEPTRAVEL NAVBAR
+   HUBSAFARI NAVBAR
    ========================================================= */
 
 .navbar {
@@ -390,7 +390,7 @@
   padding: 0;
 
   /*
-   * Same visual language as the DeepTravel D logo.
+   * Same visual language as the Hubsafari D logo.
    */
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 50%;
@@ -493,17 +493,18 @@
 
     padding: 0;
 
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
+    border: 0;
+    border-radius: 0;
 
-    background: rgba(8, 11, 13, 0.32);
+    background: transparent;
+    box-shadow: none;
     color: #ffffff;
     cursor: pointer;
   }
 
   .navbar__menu-toggle:hover {
-    border-color: rgba(217, 181, 109, 0.8);
-    background: rgba(8, 11, 13, 0.56);
+    background: transparent;
+    color: var(--accent);
   }
 
   .navbar__menu-toggle span {

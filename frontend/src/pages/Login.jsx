@@ -110,7 +110,7 @@ function Login() {
         <div className="auth-page__visual-content">
 
           <p className="eyebrow">
-            DeepTravel
+            Hubsafari
           </p>
 
           <h2>
@@ -317,7 +317,7 @@ function Login() {
               ================================================== */}
 
           <p className="auth-page__footer">
-            New to DeepTravel?{" "}
+            New to Hubsafari?{" "}
 
             <Link to="/register">
               Create an account →

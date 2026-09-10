@@ -136,7 +136,7 @@ function ResetPassword() {
         <div className="auth-page__visual-content">
 
           <p className="eyebrow">
-            DeepTravel
+            Hubsafari
           </p>
 
           <h2>
@@ -188,7 +188,7 @@ function ResetPassword() {
 
             <p>
               Choose a new password for
-              your DeepTravel account.
+              your Hubsafari account.
             </p>
 
           </div>

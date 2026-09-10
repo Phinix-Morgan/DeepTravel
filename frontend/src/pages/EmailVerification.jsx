@@ -73,7 +73,7 @@ function EmailVerification() {
         if (!cancelled) {
           setStatus("error");
           setMessage(
-            "Unable to connect to DeepTravel. Please try again."
+            "Unable to connect to Hubsafari. Please try again."
           );
         }
       }
@@ -107,7 +107,7 @@ function EmailVerification() {
         <div className="auth-page__visual-content">
 
           <p className="eyebrow">
-            DeepTravel
+            Hubsafari
           </p>
 
           <h2>

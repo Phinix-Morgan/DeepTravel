@@ -185,7 +185,7 @@ function Register() {
         <div className="auth-page__visual-content">
 
           <p className="eyebrow">
-            DeepTravel
+            Hubsafari
           </p>
 
           <h2>

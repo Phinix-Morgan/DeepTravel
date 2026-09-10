@@ -86,7 +86,7 @@ function DestinationDetails() {
           <div className="container">
             <div className="destination-detail__state">
               <span className="eyebrow">
-                DeepTravel
+                Hubsafari
               </span>
 
               <h1 className="display-md">
@@ -199,7 +199,7 @@ function DestinationDetails() {
             <div />
 
             <span>
-              DeepTravel
+              Hubsafari
             </span>
 
           </div>

@@ -105,7 +105,7 @@ function CustomTripBuilder() {
     <section className="custom-trip-hero"><div className="content-width">
       <span className="eyebrow">Tailored journeys</span>
       <h1 className="display-lg">Travel, made<br />entirely yours.</h1>
-      <p>Start with a DeepTravel journey, then tell our travel designers how you want to make it your own.</p>
+      <p>Start with a Hubsafari journey, then tell our travel designers how you want to make it your own.</p>
     </div></section>
     <section className="section"><div className="content-width custom-trip-builder">
       <div className="custom-trip-builder__intro"><span className="eyebrow">Your request</span><h2 className="display-md">The details that matter.</h2><p>We will review your preferences and send a considered proposal. You are not booking or paying yet.</p></div>

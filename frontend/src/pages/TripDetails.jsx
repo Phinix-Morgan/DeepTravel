@@ -377,12 +377,12 @@ function TripDetails() {
           razorpayOrder.currency ||
           "INR",
 
-        name: "DeepTravel",
+        name: "Hubsafari",
 
         description:
           booking.tourPackage
             ?.title ||
-          "DeepTravel journey",
+          "Hubsafari journey",
 
         order_id:
           razorpayOrder.id,
@@ -641,7 +641,7 @@ function TripDetails() {
           />
         ) : (
           <div className="trip-details__hero-placeholder">
-            DeepTravel
+            Hubsafari
           </div>
         )}
 
@@ -664,7 +664,7 @@ function TripDetails() {
 
             <h1>
               {packageData.title ||
-                "Your DeepTravel journey"}
+                "Your Hubsafari journey"}
             </h1>
 
             <p>
@@ -914,7 +914,7 @@ function TripDetails() {
 
               <p>
                 {packageData.description ||
-                  "Your DeepTravel journey is waiting for you."}
+                  "Your Hubsafari journey is waiting for you."}
               </p>
 
               {packageData.duration && (

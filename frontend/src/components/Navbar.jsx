@@ -112,7 +112,7 @@ function Navbar() {
         <Link
           to="/"
           className="navbar__brand"
-          aria-label="DeepTravel home"
+          aria-label="Hubsafari home"
           onClick={closeMobileMenu}
         >
           <span
@@ -123,7 +123,7 @@ function Navbar() {
           </span>
 
           <span className="navbar__wordmark">
-            DEEPTRAVEL
+            HUBSAFARI
           </span>
         </Link>
 

@@ -647,7 +647,7 @@ export default function AdminPackages() {
     <section className="admin-page">
       <PageHeading
         title="Tour packages"
-        description="Build the journeys that form every DeepTravel proposal."
+        description="Build the journeys that form every Hubsafari proposal."
         action={
           <Button
             onClick={() => open(null)}

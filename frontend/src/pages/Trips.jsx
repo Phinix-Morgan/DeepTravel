@@ -136,7 +136,7 @@ function TripCard({
 
         <p className="trip-card__description">
           {packageData?.description ||
-            "Your DeepTravel journey."}
+            "Your Hubsafari journey."}
         </p>
 
         <div className="trip-card__meta">
@@ -409,7 +409,7 @@ function Trips() {
         <div className="content-width">
           <div className="trips-loading">
             <span className="eyebrow">
-              DeepTravel
+              Hubsafari
             </span>
 
             <h1 className="display-md">

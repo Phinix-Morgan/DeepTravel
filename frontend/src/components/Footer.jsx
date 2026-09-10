@@ -7,7 +7,7 @@ function Footer() {
         <div className="footer__top">
           <div className="footer__brand">
             <Link to="/" className="footer__logo">
-              DEEPTRAVEL
+              HUBSAFARI
             </Link>
 
             <p>
@@ -38,7 +38,7 @@ function Footer() {
 
             <div className="footer__group">
               <span className="footer__heading">
-                DeepTravel
+                Hubsafari
               </span>
 
               <Link to="/about">About</Link>
@@ -50,7 +50,7 @@ function Footer() {
 
         <div className="footer__bottom">
           <span>
-            © {new Date().getFullYear()} DeepTravel
+            © {new Date().getFullYear()} Hubsafari
           </span>
 
           <span>

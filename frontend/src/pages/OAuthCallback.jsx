@@ -73,7 +73,7 @@ function OAuthCallback() {
                 <h1>
                   Welcome to
                   <br />
-                  DeepTravel.
+                  Hubsafari.
                 </h1>
 
                 <p>
