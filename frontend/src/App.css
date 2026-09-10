@@ -224,9 +224,9 @@
 
   margin: 0 auto;
 
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
 }
 
 
@@ -235,7 +235,7 @@
    ========================================================= */
 
 .navbar__brand {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 10px;
 
@@ -259,15 +259,19 @@
 
   flex: 0 0 28px;
 
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+
+  margin: 0;
+  padding: 0;
 
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 50%;
 
   color: #ffffff;
 
+  font-family: var(--font-display);
   font-size: 13px;
   font-weight: 500;
   line-height: 1;
@@ -286,7 +290,10 @@
 .navbar__nav {
   display: flex;
   align-items: center;
-  gap: 32px;
+  justify-self: center;
+  gap: 28px;
+
+  white-space: nowrap;
 }
 
 .navbar__link {
@@ -297,6 +304,7 @@
 
   font-size: 13px;
   line-height: 1.5;
+  white-space: nowrap;
 
   transition:
     color 0.25s ease,
@@ -333,7 +341,8 @@
 .navbar__actions {
   display: flex;
   align-items: center;
-  gap: 18px;
+  justify-self: end;
+  gap: 16px;
 }
 
 
@@ -342,7 +351,7 @@
    ========================================================= */
 
 .navbar__user {
-  display: inline-flex;
+  display: flex;
   align-items: center;
 
   gap: 10px;
@@ -373,9 +382,12 @@
 
   flex: 0 0 30px;
 
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+
+  margin: 0;
+  padding: 0;
 
   /*
    * Same visual language as the DeepTravel D logo.
@@ -442,75 +454,154 @@
   color: #ffffff;
 }
 
+.navbar__menu-toggle,
+.navbar__mobile-panel,
+.navbar__backdrop {
+  display: none;
+}
+
 
 /* =========================================================
    NAVBAR RESPONSIVE
    ========================================================= */
 
-@media (max-width: 768px) {
+@media (max-width: 860px) {
   .navbar__inner {
     width: min(100% - 32px, 1200px);
     min-height: 64px;
+    display: flex;
+    justify-content: space-between;
   }
 
   .navbar__nav {
-    gap: 18px;
-  }
-
-  .navbar__link {
-    font-size: 12px;
-  }
-
-  .navbar__actions {
-    gap: 10px;
-  }
-
-  /*
-   * Keep the circular avatar,
-   * hide the username on smaller screens.
-   */
-  .navbar__user-name {
     display: none;
   }
 
-  .navbar__user {
-    gap: 0;
+  .navbar__actions {
+    display: none;
+  }
+
+  .navbar__menu-toggle {
+    width: 44px;
+    height: 44px;
+
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    padding: 0;
+
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+
+    background: rgba(8, 11, 13, 0.32);
+    color: #ffffff;
+    cursor: pointer;
+  }
+
+  .navbar__menu-toggle:hover {
+    border-color: rgba(217, 181, 109, 0.8);
+    background: rgba(8, 11, 13, 0.56);
+  }
+
+  .navbar__menu-toggle span {
+    width: 16px;
+    height: 1px;
+    display: block;
+    background: currentColor;
+  }
+
+  .navbar__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+
+    display: block;
+    width: 100%;
+    height: 100vh;
+    padding: 0;
+
+    border: 0;
+    background: rgba(3, 5, 6, 0.48);
+    cursor: default;
+  }
+
+  .navbar__mobile-panel {
+    position: absolute;
+    top: 64px;
+    left: 16px;
+    right: 16px;
+    z-index: 1;
+
+    display: block;
+    padding: 12px 20px 16px;
+
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #0b0e0f;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+  }
+
+  .navbar__mobile-nav,
+  .navbar__mobile-actions {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .navbar__mobile-nav {
+    gap: 2px;
+  }
+
+  .navbar__mobile-link,
+  .navbar__mobile-actions a,
+  .navbar__mobile-logout {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+
+    color: rgba(255, 255, 255, 0.84);
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+
+  .navbar__mobile-link--active,
+  .navbar__mobile-link:hover,
+  .navbar__mobile-actions a:hover,
+  .navbar__mobile-logout:hover {
+    color: #ffffff;
+  }
+
+  .navbar__mobile-link--active {
+    color: var(--accent);
+  }
+
+  .navbar__mobile-actions {
+    gap: 2px;
+    margin-top: 10px;
+    padding-top: 10px;
+
+    border-top: 1px solid rgba(255, 255, 255, 0.13);
+  }
+
+  .navbar__mobile-logout {
+    width: 100%;
+    padding: 0;
+
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
   }
 }
 
-
-/* =========================================================
-   SMALL MOBILE
-   ========================================================= */
-
-@media (max-width: 560px) {
+@media (max-width: 460px) {
   .navbar__inner {
     width: calc(100% - 24px);
   }
 
-  .navbar__brand > span:last-child {
-    display: none;
-  }
-
-  .navbar__nav {
-    gap: 12px;
-  }
-
-  .navbar__link {
+  .navbar__wordmark {
     font-size: 11px;
-  }
-
-  .navbar__login {
-    display: none;
-  }
-
-  .navbar__user-avatar {
-    width: 28px;
-    height: 28px;
-
-    min-width: 28px;
-    min-height: 28px;
-
-    flex-basis: 28px;
   }
 }

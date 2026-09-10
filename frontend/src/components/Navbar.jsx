@@ -1,4 +1,9 @@
 import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
   Link,
   NavLink,
   useNavigate,
@@ -26,6 +31,8 @@ const navItems = [
 
 function Navbar() {
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] =
+    useState(false);
 
   const {
     user,
@@ -40,7 +47,38 @@ function Navbar() {
       (item.protected && isAuthenticated)
   );
 
+  const navigationItems = [
+    ...visibleItems,
+    ...(isAuthenticated && user?.role === "admin"
+      ? [{ label: "Admin Panel", to: "/admin" }]
+      : []),
+  ];
+
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      return undefined;
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
+
+  function closeMobileMenu() {
+    setMobileMenuOpen(false);
+  }
+
   async function handleLogout() {
+    closeMobileMenu();
+
     try {
       await logout();
 
@@ -75,6 +113,7 @@ function Navbar() {
           to="/"
           className="navbar__brand"
           aria-label="DeepTravel home"
+          onClick={closeMobileMenu}
         >
           <span
             className="navbar__brand-mark"
@@ -83,7 +122,7 @@ function Navbar() {
             D
           </span>
 
-          <span>
+          <span className="navbar__wordmark">
             DEEPTRAVEL
           </span>
         </Link>
@@ -97,7 +136,7 @@ function Navbar() {
           className="navbar__nav"
           aria-label="Main navigation"
         >
-          {visibleItems.map((item) => (
+          {navigationItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -112,19 +151,6 @@ function Navbar() {
               {item.label}
             </NavLink>
           ))}
-
-          {isAuthenticated && user?.role === "admin" && (
-            <NavLink
-              to="/admin"
-              className={({ isActive }) =>
-                `navbar__link ${
-                  isActive ? "navbar__link--active" : ""
-                }`
-              }
-            >
-              Admin Panel
-            </NavLink>
-          )}
         </nav>
 
 
@@ -208,7 +234,83 @@ function Navbar() {
 
         </div>
 
+        <button
+          type="button"
+          className="navbar__menu-toggle"
+          aria-label={
+            mobileMenuOpen
+              ? "Close navigation menu"
+              : "Open navigation menu"
+          }
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-navigation"
+          onClick={() => setMobileMenuOpen((open) => !open)}
+        >
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+        </button>
+
       </div>
+
+      {mobileMenuOpen && (
+        <>
+          <button
+            type="button"
+            className="navbar__backdrop"
+            aria-label="Close navigation menu"
+            onClick={closeMobileMenu}
+          />
+
+          <section
+            id="mobile-navigation"
+            className="navbar__mobile-panel"
+            aria-label="Mobile navigation"
+          >
+            <nav className="navbar__mobile-nav" aria-label="Main navigation">
+              {navigationItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `navbar__mobile-link ${
+                      isActive ? "navbar__mobile-link--active" : ""
+                    }`
+                  }
+                  onClick={closeMobileMenu}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+
+            <div className="navbar__mobile-actions">
+              {loading ? (
+                <span className="navbar__auth-loading" aria-live="polite">
+                  ...
+                </span>
+              ) : isAuthenticated ? (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="navbar__mobile-logout"
+                >
+                  Logout
+                </button>
+              ) : (
+                <>
+                  <Link to="/login" onClick={closeMobileMenu}>
+                    Login
+                  </Link>
+                  <Link to="/register" onClick={closeMobileMenu}>
+                    Get started
+                  </Link>
+                </>
+              )}
+            </div>
+          </section>
+        </>
+      )}
     </header>
   );
 }
