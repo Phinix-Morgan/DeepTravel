@@ -115,13 +115,6 @@ function Navbar() {
           aria-label="Hubsafari home"
           onClick={closeMobileMenu}
         >
-          <span
-            className="navbar__brand-mark"
-            aria-hidden="true"
-          >
-            D
-          </span>
-
           <span className="navbar__wordmark">
             HUBSAFARI
           </span>

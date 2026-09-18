@@ -144,7 +144,7 @@ function Login() {
             to="/"
             className="auth-page__brand"
           >
-            DEEP<span>TRAVEL</span>.
+            HUBSAFARI
           </Link>
 
 

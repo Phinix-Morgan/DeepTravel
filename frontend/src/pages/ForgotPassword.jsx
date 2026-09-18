@@ -82,7 +82,7 @@ function ForgotPassword() {
             to="/"
             className="auth-page__brand"
           >
-            DEEP<span>TRAVEL</span>.
+            HUBSAFARI
           </Link>
 
           <div className="auth-page__heading">

@@ -59,7 +59,7 @@ function OAuthCallback() {
         <div className="auth-page__form-container">
 
           <div className="auth-page__brand">
-            DEEP<span>TRAVEL</span>.
+            HUBSAFARI
           </div>
 
           {!error ? (

@@ -1616,7 +1616,7 @@ p {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
 
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .explore-card {
@@ -1935,6 +1935,7 @@ p {
 
   .explore-destinations__grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 
   .explore-card,

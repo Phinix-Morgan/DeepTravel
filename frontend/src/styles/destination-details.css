@@ -319,10 +319,8 @@
 .destination-detail__packages-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1px;
+  gap: 1.5rem;
   margin-top: 4rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.12);
 }
 
 .destination-package-card {
@@ -681,6 +679,7 @@
 
   .destination-detail__packages-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 
   .destination-detail__journeys-inner {
