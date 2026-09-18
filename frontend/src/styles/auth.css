@@ -17,7 +17,12 @@
 
 .auth-page__visual {
   position: relative;
+  align-self: start;
+  height: max(760px, calc(100vh - 80px));
   min-height: 760px;
+  display: flex;
+  align-items: center;
+  padding-inline: clamp(2rem, 6vw, 6rem);
   overflow: hidden;
   background: #101516;
 }
@@ -46,11 +51,9 @@
 }
 
 .auth-page__visual-content {
-  position: absolute;
+  position: relative;
   z-index: 2;
-  left: clamp(2rem, 6vw, 6rem);
-  right: clamp(2rem, 6vw, 6rem);
-  bottom: 4rem;
+  width: 100%;
 }
 
 .auth-page__visual-content .eyebrow {
@@ -438,6 +441,7 @@
   }
 
   .auth-page__visual {
+    height: auto;
     min-height: 420px;
   }
 
@@ -457,9 +461,11 @@
   }
 
   .auth-page__visual-content {
+    position: absolute;
     left: 1.5rem;
     right: 1.5rem;
     bottom: 2rem;
+    width: auto;
   }
 
   .auth-page__visual-content h2 {

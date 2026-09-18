@@ -8,6 +8,8 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { getGoogleLoginUrl } from "../services/auth";
 
+import heroImage from "../assets/auth-hero.png";
+
 import "../styles/auth.css";
 
 function Login() {
@@ -100,14 +102,14 @@ function Login() {
 
         <div className="auth-page__visual-image">
           <img
-            src="/src/assets/hero.png"
-            alt="A journey waiting to be discovered"
+            src={heroImage}
+            alt="Mountain landscape at dusk"
           />
         </div>
 
         <div className="auth-page__visual-overlay" />
 
-        <div className="auth-page__visual-content">
+        <div className="auth-page__visual-content auth-page__visual-content--login">
 
           <p className="eyebrow">
             Hubsafari

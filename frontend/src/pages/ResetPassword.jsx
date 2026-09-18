@@ -7,6 +7,8 @@ import {
 
 import { resetPassword } from "../services/auth";
 
+import heroImage from "../assets/auth-hero.png";
+
 import "../styles/auth.css";
 
 function ResetPassword() {
@@ -126,8 +128,8 @@ function ResetPassword() {
 
         <div className="auth-page__visual-image">
           <img
-            src="/src/assets/hero.png"
-            alt="A journey waiting to be discovered"
+            src={heroImage}
+            alt="Mountain landscape at dusk"
           />
         </div>
 
