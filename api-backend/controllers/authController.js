@@ -5,6 +5,11 @@ const User = require("../models/User");
 const EmailVerification = require("../models/EmailVerification");
 const RefreshToken = require("../models/RefreshToken");
 const PasswordResetToken = require("../models/PasswordResetToken");
+const {
+  getEmailConfig,
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} = require("../services/emailService");
 
 const {
   generateAccessToken,
@@ -23,6 +28,8 @@ async function register(req, res) {
         message: "Name, email, and password are required.",
       });
     }
+
+    getEmailConfig();
 
     const normalizedName = name.trim();
     const normalizedEmail = email.trim().toLowerCase();
@@ -77,9 +84,23 @@ async function register(req, res) {
       expiresAt,
     });
 
-    const verificationUrl =
-      `${req.protocol}://${req.get("host")}` +
-      `/api/auth/verify-email/${rawToken}`;
+    try {
+      await sendVerificationEmail({
+        recipient: user.email,
+        name: user.name,
+        token: rawToken,
+      });
+    } catch (error) {
+      console.error(
+        "Registration email delivery failed:",
+        error.message
+      );
+
+      return res.status(503).json({
+        message:
+          "Account created, but the verification email could not be sent. Please try again later.",
+      });
+    }
 
     return res.status(201).json({
       message:
@@ -94,14 +115,15 @@ async function register(req, res) {
         role: user.role,
       },
 
-      verificationUrl,
     });
   } catch (error) {
     console.error("Registration error:", error);
 
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       message:
-        "Something went wrong while creating the account.",
+        error.statusCode
+          ? error.message
+          : "Something went wrong while creating the account.",
     });
   }
 }
@@ -183,7 +205,7 @@ async function resendVerificationEmail(req, res) {
 
     const genericResponse = {
       message:
-        "If an unverified account with that email exists, a new verification link has been generated.",
+        "If an unverified account with that email exists, a new verification email has been sent.",
     };
 
     if (!email) {
@@ -191,6 +213,8 @@ async function resendVerificationEmail(req, res) {
         message: "Email is required.",
       });
     }
+
+    getEmailConfig();
 
     const normalizedEmail =
       email.trim().toLowerCase();
@@ -237,16 +261,21 @@ async function resendVerificationEmail(req, res) {
       expiresAt,
     });
 
-    const verificationUrl =
-      `${req.protocol}://${req.get("host")}` +
-      `/api/auth/verify-email/${rawToken}`;
+    try {
+      await sendVerificationEmail({
+        recipient: user.email,
+        name: user.name,
+        token: rawToken,
+      });
+    } catch (error) {
+      console.error(
+        "Verification email delivery failed:",
+        error.message
+      );
+    }
 
-    // Development-only response.
-    // In production, this URL should be sent by email
-    // instead of being returned by the API.
     return res.status(200).json({
       ...genericResponse,
-      verificationUrl,
     });
   } catch (error) {
     console.error(
@@ -254,9 +283,11 @@ async function resendVerificationEmail(req, res) {
       error
     );
 
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       message:
-        "Something went wrong while processing the verification request.",
+        error.statusCode
+          ? error.message
+          : "Something went wrong while processing the verification request.",
     });
   }
 }
@@ -696,7 +727,7 @@ async function forgotPassword(req, res) {
 
     const genericResponse = {
       message:
-        "If an account with that email exists, a password reset link has been generated.",
+        "If an account with that email exists, a password reset email has been sent.",
     };
 
     if (!email) {
@@ -704,6 +735,8 @@ async function forgotPassword(req, res) {
         message: "Email is required.",
       });
     }
+
+    getEmailConfig();
 
     const normalizedEmail =
       email.trim().toLowerCase();
@@ -750,13 +783,21 @@ async function forgotPassword(req, res) {
       expiresAt,
     });
 
-    const resetUrl =
-      `${req.protocol}://${req.get("host")}` +
-      `/api/auth/reset-password/${rawToken}`;
+    try {
+      await sendPasswordResetEmail({
+        recipient: user.email,
+        name: user.name,
+        token: rawToken,
+      });
+    } catch (error) {
+      console.error(
+        "Password reset email delivery failed:",
+        error.message
+      );
+    }
 
     return res.status(200).json({
       ...genericResponse,
-      resetUrl,
     });
   } catch (error) {
     console.error(
@@ -764,9 +805,11 @@ async function forgotPassword(req, res) {
       error
     );
 
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       message:
-        "Something went wrong while processing the password reset request.",
+        error.statusCode
+          ? error.message
+          : "Something went wrong while processing the password reset request.",
     });
   }
 }
