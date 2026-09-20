@@ -138,6 +138,12 @@ const mockPaymentSuccess = async (
   req,
   res
 ) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(404).json({
+      message: "API endpoint not found.",
+    });
+  }
+
   try {
     const userId = req.user.userId;
     const { paymentId } = req.params;

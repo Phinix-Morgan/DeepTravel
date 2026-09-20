@@ -42,10 +42,12 @@ router.post(
 // Development/testing only.
 // --------------------------------------------------
 
-router.post(
-  "/:paymentId/mock-success",
-  mockPaymentSuccess
-);
+if (process.env.NODE_ENV !== "production") {
+  router.post(
+    "/:paymentId/mock-success",
+    mockPaymentSuccess
+  );
+}
 
 // --------------------------------------------------
 // Get Payment
